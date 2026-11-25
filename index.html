@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#10131a">
+    <meta name="description" content="LifeOS — seu sistema pessoal de organização, com dados locais protegidos.">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./public/icons/lifeos-192.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./src/styles.css">
+    <title>LifeOS</title>
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <aside class="sidebar" aria-label="Navegação principal">
+        <a class="brand" href="#dashboard" aria-label="LifeOS, painel">
+          <span class="brand-mark" aria-hidden="true">L</span>
+          <span>LifeOS</span>
+        </a>
+        <nav class="nav-list">
+          <a class="nav-link is-active" href="#dashboard" data-route="dashboard"><span aria-hidden="true">⌂</span> Painel</a>
+          <a class="nav-link" href="#tasks" data-route="tasks"><span aria-hidden="true">☷</span> Tarefas</a>
+          <a class="nav-link" href="#calendar" data-route="calendar"><span aria-hidden="true">▦</span> Calendário</a>
+          <a class="nav-link" href="#habits" data-route="habits"><span aria-hidden="true">◉</span> Hábitos</a>
+          <a class="nav-link" href="#goals" data-route="goals"><span aria-hidden="true">◎</span> Objetivos</a>
+          <span class="nav-divider" aria-hidden="true"></span>
+          <a class="nav-link" href="#study" data-route="study"><span aria-hidden="true">▧</span> Estudos</a>
+          <a class="nav-link" href="#projects" data-route="projects"><span aria-hidden="true">▰</span> Projetos</a>
+          <a class="nav-link" href="#notes" data-route="notes"><span aria-hidden="true">▤</span> Anotações</a>
+          <a class="nav-link" href="#focus" data-route="focus"><span aria-hidden="true">◷</span> Modo Foco</a>
+          <span class="nav-divider" aria-hidden="true"></span>
+          <a class="nav-link" href="#appearance" data-route="appearance"><span aria-hidden="true">◐</span> Aparência</a>
+          <a class="nav-link" href="#privacy" data-route="privacy"><span aria-hidden="true">⬡</span> Privacidade</a>
+        </nav>
+        <div class="sidebar-bottom">
+          <span class="local-label"><span class="status-dot"></span> Dados locais criptografados</span>
+          <button class="sidebar-action" id="lock-button" type="button">Bloquear cofre</button>
+        </div>
+      </aside>
+
+      <main id="main-content" class="main-content" tabindex="-1">
+        <header class="topbar">
+          <button id="menu-button" class="icon-button menu-button" type="button" aria-label="Abrir navegação" aria-expanded="false">☰</button>
+          <div class="breadcrumbs"><span>LifeOS</span><span aria-hidden="true">/</span><strong id="page-title">Painel</strong></div>
+          <div class="topbar-actions"><span id="connectivity" class="connectivity"><span class="status-dot"></span><span>Online</span></span><button id="top-lock-button" class="icon-button" type="button" aria-label="Bloquear cofre" title="Bloquear cofre">⌑</button></div>
+        </header>
+        <div id="view" class="view" aria-live="polite"></div>
+      </main>
+    </div>
+
+    <div id="lock-screen" class="lock-screen" hidden>
+      <section class="lock-card" aria-labelledby="lock-title">
+        <div class="brand-mark lock-mark" aria-hidden="true">L</div>
+        <p class="eyebrow">Seu espaço pessoal</p>
+        <h1 id="lock-title">Desbloqueie seu LifeOS</h1>
+        <p id="lock-description" class="muted"></p>
+        <form id="vault-form" class="form-stack">
+          <label for="passphrase">Senha do cofre</label>
+          <input id="passphrase" name="passphrase" type="password" autocomplete="current-password" minlength="10" maxlength="512" required>
+          <div id="confirm-row" hidden>
+            <label for="passphrase-confirm">Confirme a senha</label>
+            <input id="passphrase-confirm" name="passphrase-confirm" type="password" autocomplete="new-password" minlength="10" maxlength="512">
+          </div>
+          <p class="lock-warning">A senha não é guardada. Se você a esquecer, não será possível recuperar os dados. Faça backups regulares quando a função de backup estiver disponível.</p>
+          <p id="lock-error" class="error-message" role="alert" hidden></p>
+          <button class="button button-primary button-wide" type="submit" id="vault-submit">Desbloquear</button>
+        </form>
+      </section>
+    </div>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
