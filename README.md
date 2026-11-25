@@ -1,49 +1,83 @@
 # LifeOS
 
-LifeOS é um sistema pessoal de organização, planejado como uma aplicação web progressiva (PWA), responsiva e local-first. A Fase 1 estabelece a fundação navegável, as preferências visuais e o cofre local criptografado.
+LifeOS is a personal organization system, designed as a responsive, local-first Progressive Web App (PWA). Phase 1 establishes the navigable foundation, visual preferences, and an encrypted local vault.
 
-## Objetivo e escopo
+## Objective and Scope
 
-O produto reunirá tarefas, estudos, projetos, hábitos, notas, objetivos, atividades físicas, calendário e foco. Deve funcionar sem conta ou serviço remoto, guardar os dados no dispositivo e oferecer exportação/importação para transferência manual entre dispositivos. Os módulos serão entregues em etapas, começando pela fundação e rotina pessoal.
+The product will integrate tasks, studies, projects, habits, notes, goals, physical activities, a calendar, and focus-tracking tools. It is designed to function without an account or remote service, storing data directly on the device and providing export/import functionality for manual data transfer between devices. Modules will be delivered in stages, beginning with the core foundation and personal routine management.
 
-## Decisões iniciais
+## Initial Decisions
 
-- Frontend: HTML semântico, CSS e JavaScript moderno com ES Modules, sem framework de interface na primeira versão.
-- Persistência: IndexedDB encapsulado por uma camada de repositórios. Na fundação, a criptografia usa Web Crypto nativa (PBKDF2-SHA-256 + AES-256-GCM), sem dependência adicional.
-- PWA: manifesto e service worker com cache dos recursos versionados da aplicação. Dados pessoais ficam no IndexedDB e não no cache HTTP.
-- Gráficos: Chart.js quando os módulos de acompanhamento forem implementados; avaliar D3 apenas para o grafo de conhecimento.
-- Privacidade: sem contas, sincronização, telemetria ou chamadas de IA por padrão.
-- Distribuição: arquivos estáticos compatíveis com hospedagem HTTPS. A execução local de desenvolvimento deve usar um servidor estático simples, pois módulos ES e service workers não funcionam corretamente em `file://`.
+- Frontend: Semantic HTML, CSS, and modern JavaScript (using ES Modules); no UI framework in the initial version.
+- Persistence: IndexedDB, encapsulated by a repository layer. For the foundation, encryption is handled via the native Web Crypto API (PBKDF2-SHA-256 + AES-256-GCM), with no external dependencies.
+- PWA: Includes a manifest and a service worker that caches the application’s versioned assets. Personal data is stored in IndexedDB, not in the HTTP cache.
+- Charts: Chart.js will be used for tracking modules; D3 will be considered specifically for a knowledge graph.
+- Privacy: No accounts, synchronization, telemetry, or AI service calls by default.
+- Distribution: Static files compatible with HTTPS hosting. Local development requires a simple static server, as ES Modules and service workers do not function correctly when accessed via the `file://` protocol.
 
-As decisões detalhadas, o esquema do banco, os riscos e os critérios de teste estão em [docs/architecture.md](docs/architecture.md).
+Detailed decisions, the database schema, risk assessments, and testing criteria can be found in [docs/architecture.md](docs/architecture.md). 
 
-## Desenvolvimento (planejado)
+## Planned Roadmap
 
-Para desenvolver e executar a aplicação localmente:
+### Phase 0 - Planning
+[x] Analyze project specifications
+[x] Define system architecture
+[x] Establish coding conventions
+[x] Design initial database schema
+[x] Create development documentation
+[x] Define testing strategy
 
-1. Instale Node.js 20 ou superior; não há dependências npm de terceiros.
-2. A partir desta pasta, execute `npm run dev`.
-3. Abra a URL local indicada (localhost) para validar o service worker e a instalação PWA.
-4. Execute `npm test` para os testes unitários.
+### Phase 1 - Foundation
+[x] Build application structure and navigation
+[x] Implement design system
+[x] Implement theming system
+[x] Implement responsive layouts
+[x] Configure IndexedDB
+[x] Implement persistence layer
+[x] Create basic Web App Manifest
+[x] Implement basic Service Worker
 
-O servidor serve os próprios arquivos estáticos e é apenas uma conveniência de desenvolvimento; não é necessário em produção. Hospede esta pasta em HTTPS. Consulte o provedor escolhido sobre configuração do caminho-base e cabeçalhos de cache.
+### Phase 2 — Organization
+[x] Dashboard
+[x] Task Management
+[x] Calendar
+[x] Habit Tracking
+[x] Goal Management
 
-## Dados e backups
+### Phase 3 — Productivity
+[x] Study Hub
+[x] Project Management
+[x] Notes
+[x] Focus Mode
 
-Os registros são armazenados criptografados no navegador e dispositivo atuais. A senha não é armazenada e a chave de criptografia existe somente enquanto o cofre está desbloqueado. Perder a senha significa perder o acesso aos dados. Limpar os dados do navegador pode apagá-los; instalar a PWA não cria backup e outro navegador ou dispositivo terá um banco separado. A exportação/importação validada está prevista para a Fase 6.
+### Phase 4 — Monitoring and Insights
+[ ] Fitness Hub
+[ ] Analytics
+[ ] Knowledge Graph
 
-## Plano de implementação
+### Phase 5 — Advanced Customization
+[ ] Configurable Dashboard
+[ ] Reorderable Widgets
+[ ] Advanced Visual Preferences
+[ ] Custom Categories
+[ ] Module-Specific Settings
 
-1. Fase 0: arquitetura, convenções, modelo inicial, documentação e plano de testes.
-2. Fase 1: navegação, sistema visual, temas, responsividade, persistência e fundação PWA.
-3. Fase 2: Dashboard, tarefas, calendário, hábitos e objetivos.
-4. Fase 3: estudos, projetos, notas e foco.
-5. Fase 4: atividades físicas, estatísticas e grafo de conhecimento.
-6. Fase 5: personalização avançada.
-7. Fase 6: backups, validação, migrações e robustez.
-8. Fase 7: otimização, testes de instalação/offline e publicação.
-9. Fase 8: avaliação de integrações futuras, incluindo IA com autorização explícita.
+### Phase 6 — Backup and Reliability
+[ ] Data Export and Import
+[ ] File Validation
+[ ] Database Migrations
+[ ] Error Handling
+[ ] Regression Testing
+[ ] Storage Management and Validation
 
-## Estado atual
+### Phase 7 — Launch and Deployment
+[ ] Application resource optimization
+[ ] Installation testing on Android
+[ ] Installation testing on Desktop
+[ ] Installation testing on iOS
+[ ] Verification of offline functionality
+[ ] Application update testing
+[ ] HTTPS hosting configuration
+[ ] Deployment and maintenance documentation
 
-Fases 1 e 2 implementadas: cofre IndexedDB criptografado, preferências visuais, Dashboard, Tarefas, Calendário, Hábitos e Objetivos. A Fase 3 agora inclui Central de Estudos, Projetos, Anotações e Modo Foco. Consulte [docs/architecture.md](docs/architecture.md) para as decisões e [docs/audit-fases-1-2.md](docs/audit-fases-1-2.md) para limites da auditoria anterior. Os novos módulos precisam de validação ponta a ponta em navegador antes de serem considerados aprovados.
+**Roadmap and website proposed by artificial intelligence. Text documents also reviewed and corrected by artificial intelligence.**
