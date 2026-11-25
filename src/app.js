@@ -9,8 +9,8 @@ import { renderStudy } from './modules/study.js';
 import { renderProjects } from './modules/projects.js';
 import { renderNotes } from './modules/notes.js';
 import { pauseFocus, renderFocus } from './modules/focus.js';
+import { $ } from './dom.js'
 
-const $ = (selector, root = document) => root.querySelector(selector);
 const view = $('#view');
 const appShell = $('.app-shell');
 const lockScreen = $('#lock-screen');

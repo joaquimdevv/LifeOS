@@ -1,5 +1,7 @@
 import { formatDate, html, makeId, optionalText, requireText, todayLocal } from '../validation.js';
 
+import { $ } from '../dom.js';
+
 const projectStatuses = { active: 'Em andamento', paused: 'Pausado', completed: 'Concluído', archived: 'Arquivado' };
 
 export async function renderProjects(vault, view, toast) {

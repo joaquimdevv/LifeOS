@@ -1,5 +1,7 @@
 import { addRecurrence, formatDate, html, isOverdue, makeId, optionalText, requireText, todayLocal } from '../validation.js';
 
+import { $ } from '../dom.js';
+
 const priorities = { low: 'Baixa', medium: 'Média', high: 'Alta', urgent: 'Urgente' };
 const statuses = { open: 'A fazer', done: 'Concluída' };
 

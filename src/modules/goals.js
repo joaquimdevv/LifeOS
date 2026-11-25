@@ -1,5 +1,7 @@
 import { formatDate, html, makeId, optionalText, requireText, todayLocal } from '../validation.js';
 
+import { $ } from '../dom.js';
+
 const horizons = { short: 'Curto prazo', medium: 'Médio prazo', long: 'Longo prazo' };
 const statuses = { active: 'Em andamento', completed: 'Concluído', cancelled: 'Cancelado' };
 

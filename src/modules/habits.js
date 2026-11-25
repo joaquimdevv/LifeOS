@@ -1,5 +1,7 @@
 import { dueToday, formatDate, html, makeId, optionalText, requireText, shiftDate, todayLocal } from '../validation.js';
 
+import { $ } from '../dom.js';
+
 const weekdays = [{ day: 1, short: 'S', name: 'Segunda' }, { day: 2, short: 'T', name: 'Terça' }, { day: 3, short: 'Q', name: 'Quarta' }, { day: 4, short: 'Q', name: 'Quinta' }, { day: 5, short: 'S', name: 'Sexta' }, { day: 6, short: 'S', name: 'Sábado' }, { day: 0, short: 'D', name: 'Domingo' }];
 const defaultColor = '#75dbc2';
 

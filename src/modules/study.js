@@ -1,5 +1,7 @@
 import { formatDate, html, makeId, optionalText, requireText, todayLocal } from '../validation.js';
 
+import { $ } from '../dom.js';
+
 const tabLabels = { subjects: 'Disciplinas', sessions: 'Sessões', cards: 'Flashcards', questions: 'Questões', grades: 'Avaliações' };
 
 export async function renderStudy(vault, view, toast) {

@@ -1,4 +1,5 @@
 import { formatDate, html, isRecurringOn, localDateFromInstant, localDateTimeValue, makeId, fromLocalDateTime, requireText, optionalText, shiftDate, todayLocal } from '../validation.js';
+import { $ } from '../dom.js';
 
 const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 const repeatLabels = { none: 'Não se repete', daily: 'Diário', weekly: 'Semanal', monthly: 'Mensal' };

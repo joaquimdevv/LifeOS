@@ -1,5 +1,7 @@
 import { html, makeId, optionalText, todayLocal } from '../validation.js';
 
+import { $ } from '../dom.js';
+
 let state = { mode: 'focus', running: false, remaining: 25 * 60, total: 25 * 60, startedAt: 0, elapsedBefore: 0, taskId: '', projectId: '', subjectId: '' };
 let intervalId;
 let currentView;

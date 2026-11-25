@@ -1,5 +1,7 @@
 import { html, makeId, optionalText, requireText } from '../validation.js';
 
+import { $ } from '../dom.js';
+
 function renderMarkdown(source, notes = []) {
   const safe = html(source);
   return safe.replace(/\[\[([^\]]{1,160})\]\]/g, (match, title) => {
