@@ -72,8 +72,8 @@ Detailed decisions, the database schema, risk assessments, and testing criteria 
 
 ### Phase 7 — Launch and Deployment
 - [x] Application resource optimization — no runtime dependencies; static SVG/SVG charts; versioned shell cache
-- [ ] Installation testing on Android
-- [ ] Installation testing on Desktop
+- [x] Installation testing on Android
+- [x] Installation testing on Desktop
 - [ ] Installation testing on iOS
 - [ ] Verification of offline functionality
 - [ ] Application update testing
