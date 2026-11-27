@@ -12,6 +12,7 @@ import { pauseFocus, renderFocus } from './modules/focus.js';
 import { renderFitness } from './modules/fitness.js';
 import { renderAnalytics } from './modules/analytics.js';
 import { renderKnowledgeGraph } from './modules/knowledge-graph.js';
+import { renderCustomization } from './modules/customization.js';
 import { $ } from './dom.js'
 
 const view = $('#view');
@@ -108,13 +109,14 @@ function renderAppearance() {
         <div class="setting-section"><div><h2>Tema</h2><p>Automático acompanha a preferência do dispositivo.</p></div><div class="segmented" role="group" aria-label="Tema"><button type="button" data-theme-value="system" aria-pressed="${preferences.theme === 'system'}">Auto</button><button type="button" data-theme-value="light" aria-pressed="${preferences.theme === 'light'}">Claro</button><button type="button" data-theme-value="dark" aria-pressed="${preferences.theme === 'dark'}">Escuro</button></div></div>
         <div class="setting-section"><div><h2>Cor de destaque</h2><p>Use uma paleta ou escolha qualquer cor.</p></div><div class="color-controls"><div class="swatch-row">${presetButtons}<label class="custom-color" title="Escolher cor personalizada"><input id="accent-color" type="color" value="${preferences.accent}" aria-label="Cor de destaque personalizada"><span aria-hidden="true">＋</span></label></div><span id="accent-value" class="field-hint">${preferences.accent.toUpperCase()}</span></div></div>
         <div class="setting-section"><div><h2>Tipografia</h2><p>Escolha o estilo de leitura da interface.</p></div><label class="sr-only" for="typography">Tipografia</label><select id="typography" class="select-control">${typeOptions}</select></div>
-        <div class="setting-section"><div><h2>Densidade</h2><p>Mais espaço ou mais conteúdo na tela.</p></div><div class="segmented" role="group" aria-label="Densidade"><button type="button" data-density-value="comfortable" aria-pressed="${preferences.density === 'comfortable'}">Confortável</button><button type="button" data-density-value="compact" aria-pressed="${preferences.density === 'compact'}">Compacta</button></div></div>
+        <div class="setting-section"><div><h2>Densidade</h2><p>Mais espaço ou mais conteúdo na tela.</p></div><div class="segmented" role="group" aria-label="Densidade"><button type="button" data-density-value="spacious" aria-pressed="${preferences.density === 'spacious'}">Ampla</button><button type="button" data-density-value="comfortable" aria-pressed="${preferences.density === 'comfortable'}">Confortável</button><button type="button" data-density-value="compact" aria-pressed="${preferences.density === 'compact'}">Compacta</button></div></div>
+        <div class="setting-section"><div><h2>Superfície dos painéis</h2><p>Escolha o contraste dos cartões em relação ao fundo.</p></div><select id="surface-style" class="select-control"><option value="standard"${preferences.surface === 'standard' ? ' selected' : ''}>Padrão</option><option value="soft"${preferences.surface === 'soft' ? ' selected' : ''}>Suave</option></select></div>
         <div class="setting-section range-section"><div><h2>Tamanho do texto</h2><p>De 90% a 125% do tamanho padrão.</p></div><div class="range-control"><input id="text-scale" type="range" min="90" max="125" step="5" value="${preferences.textScale}"><output id="text-scale-output">${preferences.textScale}%</output></div></div>
         <div class="setting-section range-section"><div><h2>Cantos</h2><p>Controle o arredondamento dos painéis.</p></div><div class="range-control"><input id="corner-radius" type="range" min="8" max="24" step="2" value="${preferences.radius}"><output id="corner-radius-output">${preferences.radius}px</output></div></div>
         <div class="setting-section"><div><h2>Contraste reforçado</h2><p>Aumenta a definição de bordas e elementos.</p></div><label class="switch"><input id="contrast-toggle" type="checkbox"${preferences.contrast ? ' checked' : ''}><span class="switch-track"></span><span class="sr-only">Contraste reforçado</span></label></div>
         <div class="setting-section"><div><h2>Reduzir movimento</h2><p>Minimiza transições e animações.</p></div><label class="switch"><input id="motion-toggle" type="checkbox"${preferences.reducedMotion ? ' checked' : ''}><span class="switch-track"></span><span class="sr-only">Reduzir movimento</span></label></div>
       </section>
-      <aside class="preview-column"><div class="preview-label"><span class="eyebrow">PRÉVIA</span><span class="live-indicator"><span class="status-dot"></span> Ao vivo</span></div><div class="preview-card"><div class="preview-top"><span class="preview-mark">L</span><span class="preview-lines"><i></i><i></i></span><span class="preview-avatar"></span></div><div class="preview-content"><span class="preview-kicker">SEU ESPAÇO</span><h3>Um dia de cada vez</h3><p>Pequenos passos também contam.</p><div class="preview-progress"><span></span></div><button type="button" class="preview-button" tabindex="-1" aria-hidden="true">Continuar</button></div></div><p class="preview-note">A prévia reflete tema, cor, tipografia, escala e densidade.</p></aside>
+      <aside class="preview-column"><div class="preview-label"><span class="eyebrow">PRÉVIA</span><span class="live-indicator"><span class="status-dot"></span> Ao vivo</span></div><div class="preview-card"><div class="preview-top"><span class="preview-mark">L</span><span class="preview-lines"><i></i><i></i></span><span class="preview-avatar"></span></div><div class="preview-content"><span class="preview-kicker">SEU ESPAÇO</span><h3>Um dia de cada vez</h3><p>Pequenos passos também contam.</p><div class="preview-progress"><span></span></div><button type="button" class="preview-button" tabindex="-1" aria-hidden="true">Continuar</button></div></div><p class="preview-note">A prévia reflete tema, cor, tipografia, escala, densidade e superfície.</p></aside>
     </div>`;
   const save = async (changes) => {
     const previous = preferences;
@@ -129,6 +131,7 @@ function renderAppearance() {
     $('#accent-value').textContent = preferences.accent.toUpperCase();
     $('#accent-color').value = preferences.accent;
     $('#typography').value = preferences.typography;
+    $('#surface-style').value = preferences.surface;
     $('#text-scale-output').textContent = `${preferences.textScale}%`;
     $('#text-scale').value = String(preferences.textScale);
     $('#corner-radius-output').textContent = `${preferences.radius}px`;
@@ -144,6 +147,7 @@ function renderAppearance() {
   view.querySelectorAll('[data-accent]').forEach((button) => button.addEventListener('click', () => save({ accent: button.dataset.accent })));
   $('#accent-color').addEventListener('input', (event) => save({ accent: event.target.value }));
   $('#typography').addEventListener('change', (event) => save({ typography: event.target.value }));
+  $('#surface-style').addEventListener('change', (event) => save({ surface: event.target.value }));
   $('#text-scale').addEventListener('input', (event) => save({ textScale: Number(event.target.value) }));
   $('#corner-radius').addEventListener('input', (event) => save({ radius: Number(event.target.value) }));
   $('#contrast-toggle').addEventListener('change', (event) => save({ contrast: event.target.checked }));
@@ -179,12 +183,11 @@ async function renderPrivacy() {
 
 async function route() {
   const [name, routeParam = ''] = (location.hash.slice(1) || 'dashboard').split('/');
-  const validRoutes = ['dashboard', 'tasks', 'calendar', 'habits', 'goals', 'study', 'projects', 'notes', 'focus', 'fitness', 'analytics', 'knowledge', 'appearance', 'privacy'];
+  const validRoutes = ['dashboard', 'tasks', 'calendar', 'habits', 'goals', 'study', 'projects', 'notes', 'focus', 'fitness', 'analytics', 'knowledge', 'customization', 'appearance', 'privacy'];
   const routeName = validRoutes.includes(name) ? name : 'dashboard';
   if (!validRoutes.includes(name)) history.replaceState(null, '', '#dashboard');
   setActiveRoute(routeName);
-  $('.sidebar').classList.remove('is-open');
-  $('#menu-button').setAttribute('aria-expanded', 'false');
+  setSidebarOpen(false);
   if (!vault && !['appearance', 'privacy'].includes(routeName)) return;
   if (routeName === 'dashboard') { setPageTitle('Painel'); await renderDashboardView(); }
   else if (routeName === 'tasks') { setPageTitle('Tarefas'); await renderTasks(vault, view, toast); }
@@ -198,9 +201,22 @@ async function route() {
   else if (routeName === 'fitness') { setPageTitle('Atividades físicas'); await renderFitness(vault, view, toast); }
   else if (routeName === 'analytics') { setPageTitle('Estatísticas'); await renderAnalytics(vault, view); }
   else if (routeName === 'knowledge') { setPageTitle('Mapa de conhecimento'); await renderKnowledgeGraph(vault, view); }
+  else if (routeName === 'customization') { setPageTitle('Personalização'); await renderCustomization(vault, view, toast); }
   else if (routeName === 'appearance') renderAppearance();
   else if (routeName === 'privacy') await renderPrivacy();
   $('#main-content').focus({ preventScroll: true });
+}
+
+function setSidebarOpen(open) {
+  const mobile = matchMedia('(max-width: 720px)').matches;
+  const expanded = Boolean(open && mobile);
+  const sidebar = $('.sidebar');
+  sidebar.classList.toggle('is-open', expanded);
+  sidebar.inert = mobile && !expanded;
+  sidebar.setAttribute('aria-hidden', String(mobile && !expanded));
+  document.body.classList.toggle('sidebar-open', expanded);
+  $('#menu-button').setAttribute('aria-expanded', String(expanded));
+  $('#sidebar-overlay').hidden = !expanded;
 }
 
 async function unlockSubmit(event) {
@@ -271,13 +287,23 @@ async function registerServiceWorker() {
 }
 
 function bindGlobalControls() {
+  let wasMobile = matchMedia('(max-width: 720px)').matches;
   window.addEventListener('hashchange', route);
   $('#lock-button').addEventListener('click', lockVault);
   $('#top-lock-button').addEventListener('click', lockVault);
   $('#menu-button').addEventListener('click', () => {
-    const opened = $('.sidebar').classList.toggle('is-open');
-    $('#menu-button').setAttribute('aria-expanded', String(opened));
+    const opening = !$('.sidebar').classList.contains('is-open');
+    setSidebarOpen(opening);
+    if (opening) $('#close-sidebar').focus();
   });
+  $('#close-sidebar').addEventListener('click', () => { setSidebarOpen(false); $('#menu-button').focus(); });
+  $('#sidebar-overlay').addEventListener('click', () => { setSidebarOpen(false); $('#menu-button').focus(); });
+  window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('.sidebar').classList.contains('is-open')) { setSidebarOpen(false); $('#menu-button').focus(); } });
+  window.addEventListener('resize', () => {
+    const isMobile = matchMedia('(max-width: 720px)').matches;
+    if (isMobile !== wasMobile) { wasMobile = isMobile; setSidebarOpen(false); }
+  });
+  setSidebarOpen(false);
   window.addEventListener('online', updateConnectivity);
   window.addEventListener('offline', updateConnectivity);
   updateConnectivity();

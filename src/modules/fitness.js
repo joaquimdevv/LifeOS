@@ -1,13 +1,14 @@
 import { formatDate, html, isValidDateOnly, makeId, optionalText, requireText, todayLocal } from '../validation.js';
 import { $ } from '../dom.js';
+import { getModulePreferences } from './customization.js';
 
 const types = { running: 'Corrida', cycling: 'Ciclismo', jiuJitsu: 'Jiu-jitsu', strength: 'Força', custom: 'Outra atividade' };
 
 export async function renderFitness(vault, view, toast) {
+  let periodDays = (await getModulePreferences(vault)).fitnessDays;
   let editingId = '';
   let editorOpen = false;
   let typeFilter = 'all';
-  let periodDays = 30;
   const run = (action) => action().catch((e) => toast(`Não foi possível concluir: ${e.message}`));
 
   async function render() {

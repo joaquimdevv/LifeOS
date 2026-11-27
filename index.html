@@ -13,10 +13,13 @@
   <body>
     <div id="app" class="app-shell">
       <aside class="sidebar" aria-label="Navegação principal">
-        <a class="brand" href="#dashboard" aria-label="LifeOS, painel">
-          <span class="brand-mark" aria-hidden="true">L</span>
-          <span>LifeOS</span>
-        </a>
+        <div class="sidebar-header">
+          <a class="brand" href="#dashboard" aria-label="LifeOS, painel">
+            <span class="brand-mark" aria-hidden="true">L</span>
+            <span>LifeOS</span>
+          </a>
+          <button id="close-sidebar" class="icon-button sidebar-close" type="button" aria-label="Fechar navegação">×</button>
+        </div>
         <nav class="nav-list">
           <a class="nav-link is-active" href="#dashboard" data-route="dashboard"><span aria-hidden="true">⌂</span> Painel</a>
           <a class="nav-link" href="#tasks" data-route="tasks"><span aria-hidden="true">☷</span> Tarefas</a>
@@ -33,6 +36,7 @@
           <a class="nav-link" href="#analytics" data-route="analytics"><span aria-hidden="true">▥</span> Estatísticas</a>
           <a class="nav-link" href="#knowledge" data-route="knowledge"><span aria-hidden="true">⌘</span> Conhecimento</a>
           <span class="nav-divider" aria-hidden="true"></span>
+          <a class="nav-link" href="#customization" data-route="customization"><span aria-hidden="true">⚙</span> Personalização</a>
           <a class="nav-link" href="#appearance" data-route="appearance"><span aria-hidden="true">◐</span> Aparência</a>
           <a class="nav-link" href="#privacy" data-route="privacy"><span aria-hidden="true">⬡</span> Privacidade</a>
         </nav>
@@ -41,6 +45,7 @@
           <button class="sidebar-action" id="lock-button" type="button">Bloquear cofre</button>
         </div>
       </aside>
+      <button id="sidebar-overlay" class="sidebar-overlay" type="button" aria-label="Fechar navegação" hidden></button>
 
       <main id="main-content" class="main-content" tabindex="-1">
         <header class="topbar">
@@ -60,7 +65,7 @@
         <p id="lock-description" class="muted"></p>
         <form id="vault-form" class="form-stack">
           <label for="passphrase">Senha do cofre</label>
-          <input id="passphrase" name="passphrase" type="password" autocomplete="current-password" minlength="10" maxlength="512" required>
+          <input id="passphrase" name="passphrase" type="password" autocomplete="current-password" minlength="5" maxlength="512" required>
           <div id="confirm-row" hidden>
             <label for="passphrase-confirm">Confirme a senha</label>
             <input id="passphrase-confirm" name="passphrase-confirm" type="password" autocomplete="new-password" minlength="10" maxlength="512">

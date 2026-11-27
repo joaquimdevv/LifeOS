@@ -1,5 +1,5 @@
 export const DEFAULT_PREFERENCES = Object.freeze({
-  theme: 'system', accent: '#a78bfa', typography: 'system', density: 'comfortable',
+  theme: 'system', accent: '#a78bfa', typography: 'system', density: 'comfortable', surface: 'standard',
   textScale: 100, radius: 16, contrast: false, reducedMotion: false
 });
 
@@ -21,7 +21,8 @@ export function normalizePreferences(value = {}) {
   if (!['system', 'light', 'dark'].includes(merged.theme)) merged.theme = DEFAULT_PREFERENCES.theme;
   if (!Object.hasOwn(TYPOGRAPHIES, merged.typography)) merged.typography = 'system';
   if (!/^#[0-9a-fA-F]{6}$/.test(merged.accent)) merged.accent = DEFAULT_PREFERENCES.accent;
-  if (!['comfortable', 'compact'].includes(merged.density)) merged.density = DEFAULT_PREFERENCES.density;
+  if (!['comfortable', 'compact', 'spacious'].includes(merged.density)) merged.density = DEFAULT_PREFERENCES.density;
+  if (!['standard', 'soft'].includes(merged.surface)) merged.surface = DEFAULT_PREFERENCES.surface;
   merged.textScale = Math.min(125, Math.max(90, Number(merged.textScale) || 100));
   merged.radius = Math.min(24, Math.max(8, Number(merged.radius) || 16));
   merged.contrast = Boolean(merged.contrast);
@@ -40,6 +41,7 @@ export function applyPreferences(input, root = document.documentElement) {
   const [red, green, blue] = colorChannels(preferences.accent);
   root.dataset.theme = dark ? 'dark' : 'light';
   root.dataset.density = preferences.density;
+  root.dataset.surface = preferences.surface;
   root.dataset.contrast = preferences.contrast ? 'high' : 'normal';
   root.dataset.motion = preferences.reducedMotion ? 'reduced' : 'full';
   root.style.setProperty('--accent', preferences.accent);

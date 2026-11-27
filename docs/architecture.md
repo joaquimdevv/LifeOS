@@ -178,6 +178,14 @@ Os módulos das Fases 2 e 3 usam coleções cifradas na store genérica existent
 - `dom.js` foi adicionado manualmente para centralizar seletores DOM e passou a ser importado pelos módulos; foi incluído no pré-cache do service worker. O cache subiu para `lifeos-shell-v5` e o shell inclui os três módulos novos.
 - Os imports podem ser carregados pelo runtime Node, mas CRUD de interface, IndexedDB real, atualização offline e adaptação visual ainda não foram validados no navegador. A Fase 4 não está aprovada até essa validação.
 
+### Fase 5 — personalização avançada
+
+- `customization.js` configura seis widgets do painel (visibilidade, ordenação por setas e arrastar/soltar), categorias próprias por módulo e preferências iniciais de Tarefas, Estatísticas, Atividades físicas e Mapa de conhecimento.
+- As opções são registros cifrados na coleção `settings`: `dashboardLayout`, `customCategories` e `modulePreferences`. As categorias atuam como sugestões nos formulários; categorias já atribuídas aos registros são preservadas quando uma sugestão é removida.
+- Preferências de aparência agora incluem três densidades (ampla, confortável e compacta) e superfície de painel padrão/suave, aplicadas por tokens CSS.
+- O service worker avança para `lifeos-shell-v6` e inclui o novo módulo. Persistência no cofre real, reabertura após bloqueio, interação por toque e layouts responsivos da Fase 5 ainda requerem validação integrada.
+- A barra lateral usa a altura da viewport (`100dvh`, com fallback), com rolagem apenas na navegação. Em telas móveis, botão X, overlay e Escape fecham o painel, restauram o foco no acionador e mantêm a rota atual; o service worker passa para `lifeos-shell-v7` para distribuir a correção.
+
 ### Validação realizada nas Fases 1 e 2
 
 - **8 testes unitários passaram**: cifra/decifra autenticadas; separação de chaves por salt; rejeição de ciphertext/contexto alterado; normalização das preferências; datas locais; recorrência diária/semanal/mensal; ocorrência de eventos; frequência de hábitos e identificação de tarefas atrasadas.

@@ -1,5 +1,6 @@
 import { html, localDateFromInstant, shiftDate, todayLocal } from '../validation.js';
 import { $ } from '../dom.js';
+import { getModulePreferences } from './customization.js';
 
 function daySeries(days, values) {
   const today = todayLocal();
@@ -26,7 +27,7 @@ function barChart(series, label, unit = '') {
 }
 
 export async function renderAnalytics(vault, view) {
-  let days = 30;
+  let days = (await getModulePreferences(vault)).analyticsDays;
   async function render() {
     const [tasksRaw, sessionsRaw, focusRaw, activitiesRaw, habitsRaw, entriesRaw, goalsRaw, projectsRaw, subjectsRaw] = await Promise.all([
       vault.list('tasks'), vault.list('studySessions'), vault.list('focusSessions'), vault.list('fitnessActivities'), vault.list('habits'), vault.list('habitEntries'), vault.list('goals'), vault.list('projects'), vault.list('studySubjects')

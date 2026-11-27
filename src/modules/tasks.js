@@ -1,6 +1,7 @@
 import { addRecurrence, formatDate, html, isOverdue, makeId, optionalText, requireText, todayLocal } from '../validation.js';
 
 import { $ } from '../dom.js';
+import { getCustomCategories, getModulePreferences } from './customization.js';
 
 const priorities = { low: 'Baixa', medium: 'Média', high: 'Alta', urgent: 'Urgente' };
 const statuses = { open: 'A fazer', done: 'Concluída' };
@@ -20,6 +21,7 @@ function taskDateLabel(task) {
 }
 
 export async function renderTasks(vault, view, toast) {
+  const [customCategories, modulePreferences] = await Promise.all([getCustomCategories(vault, 'tasks'), getModulePreferences(vault)]);
   const runAction = (action) => { action().catch((error) => toast(`Não foi possível concluir: ${error.message}`)); };
   let editingId = '';
   let editorOpen = false;
@@ -27,7 +29,7 @@ export async function renderTasks(vault, view, toast) {
   let statusFilter = 'active';
   let priorityFilter = 'all';
   let sortBy = 'dueDate';
-  let layout = 'list';
+  let layout = modulePreferences.taskLayout;
   let calendarMonth = `${todayLocal().slice(0, 7)}-01`;
   let newTaskDate = '';
 
@@ -65,7 +67,7 @@ export async function renderTasks(vault, view, toast) {
             <label for="task-title">Título</label><input id="task-title" name="title" maxlength="160" required value="${html(editing?.title || '')}" placeholder="Ex.: Preparar material da semana">
             <label for="task-description">Descrição</label><textarea id="task-description" name="description" rows="3" maxlength="2000" placeholder="Detalhes ou contexto">${html(editing?.description || '')}</textarea>
             <div class="form-two"><div><label for="task-priority-input">Prioridade</label><select id="task-priority-input" name="priority">${Object.entries(priorities).map(([key, label]) => `<option value="${key}"${(editing?.priority || 'medium') === key ? ' selected' : ''}>${label}</option>`).join('')}</select></div><div><label for="task-due">Prazo</label><input id="task-due" name="dueDate" type="date" value="${html(editing?.dueDate || newTaskDate)}"></div></div>
-            <div class="form-two"><div><label for="task-category">Categoria</label><input id="task-category" name="category" maxlength="60" value="${html(editing?.category || '')}" placeholder="Pessoal, trabalho…"></div><div><label for="task-tags">Etiquetas</label><input id="task-tags" name="tags" value="${html((editing?.tags || []).join(', '))}" placeholder="Separadas por vírgula"></div></div>
+            <div class="form-two"><div><label for="task-category">Categoria</label><input id="task-category" name="category" list="task-categories" maxlength="60" value="${html(editing?.category || '')}" placeholder="Pessoal, trabalho…"><datalist id="task-categories">${customCategories.map((item) => `<option value="${html(item.name)}"></option>`).join('')}</datalist></div><div><label for="task-tags">Etiquetas</label><input id="task-tags" name="tags" value="${html((editing?.tags || []).join(', '))}" placeholder="Separadas por vírgula"></div></div>
             <label for="task-goal">Objetivo vinculado</label><select id="task-goal" name="goalId"><option value="">Sem objetivo</option>${goalOptions}</select>
             <label for="task-recurrence">Repetição</label><select id="task-recurrence" name="recurrence"><option value="none"${(editing?.recurrence || 'none') === 'none' ? ' selected' : ''}>Não se repete</option><option value="daily"${editing?.recurrence === 'daily' ? ' selected' : ''}>Diária</option><option value="weekly"${editing?.recurrence === 'weekly' ? ' selected' : ''}>Semanal</option><option value="monthly"${editing?.recurrence === 'monthly' ? ' selected' : ''}>Mensal</option></select>
             <label for="task-subtasks">Checklist <span class="field-hint">Um item por linha; use [x] no começo para marcar como concluído.</span></label><textarea id="task-subtasks" name="subtasks" rows="3" maxlength="1000" placeholder="Separar materiais\nRevisar rascunho">${html(subtasksText)}</textarea>

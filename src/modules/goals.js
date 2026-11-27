@@ -1,6 +1,7 @@
 import { formatDate, html, makeId, optionalText, requireText, todayLocal } from '../validation.js';
 
 import { $ } from '../dom.js';
+import { getCustomCategories } from './customization.js';
 
 const horizons = { short: 'Curto prazo', medium: 'Médio prazo', long: 'Longo prazo' };
 const statuses = { active: 'Em andamento', completed: 'Concluído', cancelled: 'Cancelado' };
@@ -26,7 +27,7 @@ export async function renderGoals(vault, view, toast) {
   let statusFilter = 'active';
 
   async function render() {
-    const [rawGoals, rawTasks] = await Promise.all([vault.list('goals'), vault.list('tasks')]);
+    const [rawGoals, rawTasks, customCategories] = await Promise.all([vault.list('goals'), vault.list('tasks'), getCustomCategories(vault, 'goals')]);
     const goals = rawGoals.map(({ id, value }) => ({ ...value, id }));
     const tasks = rawTasks.map(({ id, value }) => ({ ...value, id }));
     const filtered = goals.filter((goal) => statusFilter === 'all' || goal.status === statusFilter);
@@ -40,6 +41,8 @@ export async function renderGoals(vault, view, toast) {
       <div class="goals-layout"><section class="goal-list">${filtered.length ? filtered.map((goal) => renderGoal(goal, tasks)).join('') : `<div class="module-panel empty-state"><span class="empty-icon">◎</span><h2>${goals.length ? 'Nenhum objetivo neste filtro' : 'Escolha uma direção'}</h2><p>Defina o que quer alcançar e que passos podem aproximar você.</p><button type="button" class="button button-secondary" data-empty-goal>＋ Criar objetivo</button></div>`}</section>
       <section id="goal-editor" class="module-panel editor-panel"${editorOpen ? '' : ' hidden'}><div class="editor-heading"><div><p class="eyebrow">${editing ? 'ATUALIZAR' : 'NOVO'}</p><h2>${editing ? 'Editar objetivo' : 'Novo objetivo'}</h2></div><button id="close-goal-editor" class="icon-button" type="button" aria-label="Fechar formulário">×</button></div><form id="goal-form" class="module-form"><label for="goal-title">Título</label><input id="goal-title" name="title" required maxlength="160" value="${html(editing?.title || '')}" placeholder="Ex.: Concluir curso de fotografia"><label for="goal-description">Descrição</label><textarea id="goal-description" name="description" rows="3" maxlength="2000" placeholder="O que significa alcançar esse objetivo?">${html(editing?.description || '')}</textarea><label for="goal-motivation">Motivação</label><textarea id="goal-motivation" name="motivation" rows="2" maxlength="500" placeholder="Por que isso importa para você?">${html(editing?.motivation || '')}</textarea><div class="form-two"><div><label for="goal-horizon">Horizonte</label><select id="goal-horizon" name="horizon">${Object.entries(horizons).map(([key, label]) => `<option value="${key}"${(editing?.horizon || 'medium') === key ? ' selected' : ''}>${label}</option>`).join('')}</select></div><div><label for="goal-due">Prazo opcional</label><input id="goal-due" name="targetDate" type="date" value="${html(editing?.targetDate || '')}"></div></div><label for="goal-category">Categoria</label><input id="goal-category" name="category" maxlength="60" value="${html(editing?.category || '')}" placeholder="Saúde, carreira…"><label for="goal-milestones">Marcos <span class="field-hint">Um por linha; use [x] no começo para marcar como concluído.</span></label><textarea id="goal-milestones" name="milestones" rows="4" maxlength="2000" placeholder="Pesquisar opções\nMontar um plano\nConcluir primeira etapa">${html(formMilestones)}</textarea><label for="goal-progress">Progresso ${editing?.milestones?.length ? '<span class="field-hint">Será calculado pelos marcos.</span>' : ''}</label><div class="goal-progress-input"><input id="goal-progress" name="progress" type="range" min="0" max="100" step="5" value="${editing?.progress || 0}"${editing?.milestones?.length ? ' disabled' : ''}><output id="goal-progress-value">${editing?.progress || 0}%</output></div><div class="form-actions"><button type="submit" class="button button-primary">${editing ? 'Salvar alterações' : 'Adicionar objetivo'}</button><button id="cancel-goal" type="button" class="button button-quiet">Cancelar</button></div><p id="goal-error" class="error-message" role="alert" hidden></p></form></section></div>`;
 
+    const categoryInput = $('#goal-category', view);
+    if (categoryInput) { categoryInput.setAttribute('list', 'goal-categories'); const options = document.createElement('datalist'); options.id = 'goal-categories'; options.innerHTML = customCategories.map((item) => `<option value="${html(item.name)}"></option>`).join(''); categoryInput.after(options); }
     $('#new-goal', view).addEventListener('click', () => openEditor());
     view.querySelector('[data-empty-goal]')?.addEventListener('click', () => openEditor());
     view.querySelectorAll('[data-goal-filter]').forEach((button) => button.addEventListener('click', () => { statusFilter = button.dataset.goalFilter; render(); }));

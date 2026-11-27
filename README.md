@@ -56,11 +56,11 @@ Detailed decisions, the database schema, risk assessments, and testing criteria 
 - [ ] Knowledge Graph — implementation added; end-to-end validation pending
 
 ### Phase 5 — Advanced Customization
-- [ ] Configurable Dashboard
-- [ ] Reorderable Widgets
-- [ ] Advanced Visual Preferences
-- [ ] Custom Categories
-- [ ] Module-Specific Settings
+- [ ] Configurable Dashboard — implementation added; encrypted persistence and end-to-end validation pending
+- [ ] Reorderable Widgets — arrow controls and drag-and-drop added; end-to-end validation pending
+- [ ] Advanced Visual Preferences — expanded density and surface options added; end-to-end validation pending
+- [ ] Custom Categories — management and form suggestions added for tasks, projects, goals, and habits; end-to-end validation pending
+- [ ] Module-Specific Settings — default task view, analytics/fitness period, and graph size added; end-to-end validation pending
 
 ### Phase 6 — Backup and Reliability
 - [ ] Data Export and Import
@@ -83,3 +83,7 @@ Detailed decisions, the database schema, risk assessments, and testing criteria 
 **Roadmap and website proposed by artificial intelligence. Text documents also reviewed and corrected by artificial intelligence.**
 
 Phase 4 stores physical-activity entries in the encrypted `fitnessActivities` collection, derives analytics only from saved records, and draws offline-capable SVG charts without an external chart dependency. The knowledge graph reads note links from the encrypted notes collection, offers folder/tag filters, keyboard-selectable nodes, zoom/pan controls, and a list alternative; it limits the graph drawing to 80 nodes for readability. Automated module loading and an isolated browser smoke test against an in-memory vault passed: the fitness create/edit/delete flow, analytics summaries/charts, and knowledge graph rendering were exercised. The smoke test did not use the application's IndexedDB or encryption layer, so end-to-end validation with the real vault and offline installation remains pending; Phase 4 is not marked complete.
+
+Phase 5 adds the encrypted `dashboardLayout`, `customCategories`, and `modulePreferences` settings. The dashboard can hide and reorder six widgets, category suggestions are available while editing tasks, projects, goals, and habits, and module defaults can be selected for task layout, analytics/fitness periods, and graph size. Visual preferences now include a spacious density and soft panel surface. Browser persistence, drag-and-drop behavior across touch/desktop input, and settings recovery after lock/reopen remain to be validated before marking the phase complete.
+
+The responsive sidebar fix adds an explicit close button, an outside-tap overlay, Escape handling, and focus restoration without changing the active route. Its height follows the viewport; only the navigation area scrolls when the content exceeds the space available, keeping the bottom actions visible. The shell cache advances to `lifeos-shell-v7`.

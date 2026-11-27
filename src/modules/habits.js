@@ -1,6 +1,7 @@
 import { dueToday, formatDate, html, makeId, optionalText, requireText, shiftDate, todayLocal } from '../validation.js';
 
 import { $ } from '../dom.js';
+import { getCustomCategories } from './customization.js';
 
 const weekdays = [{ day: 1, short: 'S', name: 'Segunda' }, { day: 2, short: 'T', name: 'Terça' }, { day: 3, short: 'Q', name: 'Quarta' }, { day: 4, short: 'Q', name: 'Quinta' }, { day: 5, short: 'S', name: 'Sexta' }, { day: 6, short: 'S', name: 'Sábado' }, { day: 0, short: 'D', name: 'Domingo' }];
 const defaultColor = '#75dbc2';
@@ -16,7 +17,7 @@ export async function renderHabits(vault, view, toast) {
   let editorOpen = false;
 
   async function render() {
-    const [rawHabits, rawEntries] = await Promise.all([vault.list('habits'), vault.list('habitEntries')]);
+    const [rawHabits, rawEntries, customCategories] = await Promise.all([vault.list('habits'), vault.list('habitEntries'), getCustomCategories(vault, 'habits')]);
     const habits = rawHabits.map(({ id, value }) => ({ ...value, id })).filter((habit) => !habit.archivedAt);
     const entries = rawEntries.map(({ id, value }) => ({ ...value, id }));
     const today = todayLocal();
@@ -44,6 +45,8 @@ export async function renderHabits(vault, view, toast) {
       </section>
       <section id="habit-editor" class="module-panel editor-panel"${editorOpen ? '' : ' hidden'}><div class="editor-heading"><div><p class="eyebrow">${editing ? 'ATUALIZAR' : 'NOVO'}</p><h2>${editing ? 'Editar hábito' : 'Novo hábito'}</h2></div><button id="close-habit-editor" class="icon-button" type="button" aria-label="Fechar formulário">×</button></div><form id="habit-form" class="module-form"><label for="habit-name">Nome</label><input id="habit-name" name="name" required maxlength="100" value="${html(editing?.name || '')}" placeholder="Ex.: Alongar pela manhã"><label for="habit-category">Categoria</label><input id="habit-category" name="category" maxlength="60" value="${html(editing?.category || '')}" placeholder="Bem-estar, estudo…"><label for="habit-frequency">Frequência</label><select id="habit-frequency" name="frequency"><option value="daily"${(editing?.frequency || 'daily') === 'daily' ? ' selected' : ''}>Diária</option><option value="specific"${editing?.frequency === 'specific' ? ' selected' : ''}>Dias específicos</option></select><fieldset id="habit-days-field" class="weekday-picker"${(editing?.frequency || 'daily') === 'daily' ? ' hidden' : ''}><legend>Dias da semana</legend>${weekdays.map((item) => `<label><input type="checkbox" name="days" value="${item.day}"${(editing?.days || []).includes(item.day) ? ' checked' : ''}><span>${item.short}</span><em class="sr-only">${item.name}</em></label>`).join('')}</fieldset><div class="form-two"><div><label for="habit-target">Meta semanal</label><select id="habit-target" name="weeklyTarget">${Array.from({ length: 7 }, (_, index) => index + 1).map((number) => `<option value="${number}"${(editing?.weeklyTarget || 3) === number ? ' selected' : ''}>${number} vez${number > 1 ? 'es' : ''}</option>`).join('')}</select></div><div><label for="habit-color">Cor</label><input id="habit-color" name="color" type="color" value="${html(editing?.color || defaultColor)}"></div></div><div class="form-actions"><button type="submit" class="button button-primary">${editing ? 'Salvar alterações' : 'Adicionar hábito'}</button><button id="cancel-habit" type="button" class="button button-quiet">Cancelar</button></div><p id="habit-error" class="error-message" role="alert" hidden></p></form></section></div>`;
 
+    const categoryInput = $('#habit-category', view);
+    if (categoryInput) { categoryInput.setAttribute('list', 'habit-categories'); const options = document.createElement('datalist'); options.id = 'habit-categories'; options.innerHTML = customCategories.map((item) => `<option value="${html(item.name)}"></option>`).join(''); categoryInput.after(options); }
     $('#new-habit', view).addEventListener('click', () => openEditor());
     view.querySelector('[data-empty-habit]')?.addEventListener('click', () => openEditor());
     $('#close-habit-editor', view)?.addEventListener('click', closeEditor);
