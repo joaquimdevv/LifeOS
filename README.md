@@ -63,12 +63,12 @@ Detailed decisions, the database schema, risk assessments, and testing criteria 
 - [ ] Module-Specific Settings — default task view, analytics/fitness period, and graph size added; end-to-end validation pending
 
 ### Phase 6 — Backup and Reliability
-- [ ] Data Export and Import
-- [ ] File Validation
-- [ ] Database Migrations
-- [ ] Error Handling
-- [ ] Regression Testing
-- [ ] Storage Management and Validation
+- [x] Data Export and Import — independent encrypted backup and confirmed full restore
+- [x] File Validation — format, version, limits, KDF parameters, canonical Base64, IV, duplicate IDs, and GCM authentication
+- [x] Database Migrations — additive IndexedDB schema migration to version 2
+- [x] Error Handling — quota/abort messages and a global fallback for unexpected errors
+- [x] Regression Testing — automated backup and restore failure coverage
+- [x] Storage Management and Validation — per-collection counts, persistence request, and ciphertext integrity scan
 
 ### Phase 7 — Launch and Deployment
 - [ ] Application resource optimization
@@ -89,3 +89,5 @@ Phase 5 adds the encrypted `dashboardLayout`, `customCategories`, and `modulePre
 The responsive sidebar fix adds an explicit close button, an outside-tap overlay, Escape handling, and focus restoration without changing the active route. Its height follows the viewport; only the navigation area scrolls when the content exceeds the space available, keeping the bottom actions visible. The shell cache advances to `lifeos-shell-v7`.
 
 The Accessibility Center adds globally persisted 90–200% text scaling, reinforced contrast, reduced motion, a simplified visual mode, and a skip-to-content link. Fixed CSS text sizes now use the same scale factor, and focus-visible indicators cover all focusable controls. The app shell cache advances to `lifeos-shell-v8`. WCAG 2.2 AA conformance is not claimed until broader module-by-module assistive-technology and reflow checks are complete.
+
+Phase 6 adds portable encrypted JSON backups using a separate PBKDF2-SHA-256 key (310,000 iterations, fresh 16-byte salt) and AES-256-GCM (fresh 12-byte IV, 128-bit tag, `lifeos-backup:v1` AAD). Imports authenticate and validate the complete snapshot before showing a replacement confirmation; restore re-encrypts every record under the currently unlocked vault key and swaps records in one IndexedDB transaction. Backups are limited to 50 MB and 100,000 records. Storage diagnostics include per-collection counts and an integrity scan. IndexedDB schema migration is additive (version 2) and keeps the vault's independent record schema unchanged. The service worker cache advances to `lifeos-shell-v9`. Browser-level validation of migration, download flows, quota behavior in real IndexedDB, and offline use remains pending.

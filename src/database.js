@@ -1,7 +1,8 @@
 import { decryptText, deriveVaultKey, encryptText, randomBytes, toBase64, fromBase64, KDF_ITERATIONS } from './crypto.js';
+import { MAX_BACKUP_RECORDS } from './backup.js';
 
 const DB_NAME = 'lifeos';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const VERIFIER = 'LifeOS vault integrity v1';
 const MIN_SUPPORTED_KDF_ITERATIONS = 310_000;
 const encoder = new TextEncoder();
@@ -16,6 +17,9 @@ export function openDatabase() {
         const records = db.createObjectStore('records', { keyPath: 'id' });
         records.createIndex('collection', 'collection', { unique: false });
       }
+      // Structural migrations are additive and run inside IndexedDB's atomic upgrade transaction.
+      const records = request.transaction.objectStore('records');
+      if (!records.indexNames.contains('collection')) records.createIndex('collection', 'collection', { unique: false });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error || new Error('Não foi possível abrir o armazenamento local.'));
@@ -36,6 +40,15 @@ function transactionDone(transaction) {
     transaction.onabort = () => reject(transaction.error || new Error('A gravação local foi cancelada.'));
     transaction.onerror = () => reject(transaction.error || new Error('Falha na transação local.'));
   });
+}
+
+async function mapInBatches(items, mapper, batchSize = 32) {
+  const results = [];
+  for (let start = 0; start < items.length; start += batchSize) {
+    const batch = items.slice(start, start + batchSize);
+    results.push(...await Promise.all(batch.map(mapper)));
+  }
+  return results;
 }
 
 async function getMeta(db, key) {
@@ -147,8 +160,71 @@ export class Vault {
       else if (navigator.storage?.persist) persistence = 'disponível para solicitação';
     } catch { /* diagnóstico opcional */ }
     const transaction = this.#db.transaction('records', 'readonly');
-    const count = await requestResult(transaction.objectStore('records').count());
-    return { estimate, persistence, count };
+    const rows = await requestResult(transaction.objectStore('records').getAll());
+    const collectionCounts = {};
+    for (const row of rows) collectionCounts[row.collection] = (collectionCounts[row.collection] || 0) + 1;
+    return { estimate, persistence, count: rows.length, collectionCounts };
+  }
+
+  async exportSnapshot() {
+    const key = this.#requireKey();
+    const transaction = this.#db.transaction('records', 'readonly');
+    const rows = await requestResult(transaction.objectStore('records').getAll());
+    if (rows.length > MAX_BACKUP_RECORDS) throw new Error('O cofre excede o limite de registros aceito para backup.');
+    const seen = new Set();
+    const records = await mapInBatches(rows, async (row) => {
+      if (!row || typeof row.id !== 'string' || !row.id.trim() || typeof row.collection !== 'string' || !row.collection.trim()) {
+        throw new Error('O cofre contém um registro com metadados inválidos; o backup foi cancelado.');
+      }
+      const key = row.id;
+      if (seen.has(key)) throw new Error('O cofre contém identificadores duplicados; o backup foi cancelado.');
+      seen.add(key);
+      const plaintext = await decryptText(row, this.#requireKey(), `lifeos:v1:${row.collection}:${row.id}`);
+      return { id: row.id, collection: row.collection, value: JSON.parse(plaintext) };
+    });
+    return { schema: 1, records };
+  }
+
+  async replaceAll(logicalRecords) {
+    const key = this.#requireKey();
+    if (!Array.isArray(logicalRecords) || logicalRecords.length > MAX_BACKUP_RECORDS) throw new Error('Lista de registros inválida para restauração.');
+    const seen = new Set();
+    const encryptedRows = await mapInBatches(logicalRecords, async (row) => {
+      if (!row || typeof row.id !== 'string' || !row.id.trim() || row.id.length > 200 || typeof row.collection !== 'string' || !row.collection.trim() || row.collection.length > 120 || !Object.hasOwn(row, 'value')) {
+        throw new Error('A restauração contém um registro inválido; o cofre não foi alterado.');
+      }
+      const uniqueKey = row.id;
+      if (seen.has(uniqueKey)) throw new Error('A restauração contém identificadores duplicados; o cofre não foi alterado.');
+      seen.add(uniqueKey);
+      const serialized = JSON.stringify(row.value);
+      if (serialized === undefined) throw new Error('A restauração contém dados inválidos; o cofre não foi alterado.');
+      const encrypted = await encryptText(serialized, key, `lifeos:v1:${row.collection}:${row.id}`);
+      return { id: row.id, collection: row.collection, iv: encrypted.iv, ciphertext: encrypted.ciphertext };
+    });
+    const transaction = this.#db.transaction('records', 'readwrite');
+    const completed = transactionDone(transaction);
+    const store = transaction.objectStore('records');
+    store.clear();
+    for (const row of encryptedRows) store.put(row);
+    await completed;
+    return encryptedRows.length;
+  }
+
+  async validateIntegrity() {
+    const key = this.#requireKey();
+    const transaction = this.#db.transaction('records', 'readonly');
+    const rows = await requestResult(transaction.objectStore('records').getAll());
+    const failures = [];
+    for (const row of rows) {
+      try {
+        if (!row || typeof row.id !== 'string' || typeof row.collection !== 'string') throw new Error('Metadados inválidos.');
+        const plaintext = await decryptText(row, key, `lifeos:v1:${row.collection}:${row.id}`);
+        JSON.parse(plaintext);
+      } catch {
+        failures.push({ id: typeof row?.id === 'string' ? row.id : '', collection: typeof row?.collection === 'string' ? row.collection : '' });
+      }
+    }
+    return { total: rows.length, valid: rows.length - failures.length, failures };
   }
 
   async requestPersistence() {

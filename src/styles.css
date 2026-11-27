@@ -191,6 +191,12 @@ h2 { margin-bottom: 9px; font-size: calc(18px * var(--text-scale-factor, 1)); li
 .privacy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--section-gap); }
 .privacy-card { min-height: 240px; }
 .privacy-card .button { margin-top: 20px; }
+.backup-form { display: grid; gap: 9px; margin-top: 20px; }
+.backup-form + .backup-form { padding-top: 22px; border-top: 1px solid var(--line); }
+.backup-form label { color: var(--muted); font-size: calc(12px * var(--text-scale-factor, 1)); }
+.backup-form input { min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); }
+.backup-form input[type="file"] { max-width: 100%; }
+.backup-form .button { justify-self: start; margin-top: 8px; }
 .wide-card { min-height: 200px; }
 .wide-card .card-icon { margin-bottom: 17px; }
 .privacy-fact + .privacy-fact { margin-top: 0; }

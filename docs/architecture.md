@@ -52,7 +52,7 @@ Referências internas são verificadas pelo serviço de domínio após descripto
 - Web Crypto nativa: PBKDF2 com SHA-256 e salt aleatório por cofre para derivar uma chave AES-256-GCM não extraível; cada registro recebe IV aleatório de 96 bits, autenticação GCM e AAD derivada de seu ID/coleção.
 - A chave derivada permanece somente em memória durante a sessão. Ao recarregar ou bloquear, a pessoa precisa desbloquear com a senha.
 - Um verificador autenticado é armazenado em metadados para diferenciar senha incorreta sem persistir senha/chave. A aplicação não oferece redefinição capaz de recuperar os dados.
-- Senha local é exigida na primeira configuração; perder a senha torna os dados irrecuperáveis. Backups da Fase 6 deverão manter criptografia e validar a política de exportação antes de escrever.
+- Senha local é exigida na primeira configuração; perder a senha torna os dados irrecuperáveis. A Fase 6 oferece backup cifrado com uma senha separada; perder ambas as senhas impede a recuperação.
 - O envelope deixa visíveis ID, coleção, IV, versão do envelope e tamanho aproximado do texto cifrado. Não há proteção contra comprometimento do navegador enquanto o cofre está desbloqueado, keylogger, malware, extensões com acesso à página ou cópia de memória.
 - Erros de autenticação/descriptografia não devem resultar em gravação vazia ou substituição de dados. Nunca excluir/limpar o banco automaticamente por falha de senha ou migração.
 
@@ -69,8 +69,8 @@ Referências internas são verificadas pelo serviço de domínio após descripto
 
 | Risco | Efeito | Mitigação proposta |
 | --- | --- | --- |
-| Limites e políticas de armazenamento variam por navegador/dispositivo; gravação pode falhar ou dados podem ser removidos pelo navegador | Perda ou indisponibilidade de registros | Capturar erros de quota, solicitar persistência quando suportado sem prometer concessão, informar limites, salvar operações atômicas, exibir orientação de backup e testar importação/exportação na Fase 6 |
-| Senha local esquecida | Dados criptografados não podem ser recuperados | Explicar isso na configuração e desbloqueio; Fase 6 deve priorizar backup criptografado com fluxo seguro e validação clara |
+| Limites e políticas de armazenamento variam por navegador/dispositivo; gravação pode falhar ou dados podem ser removidos pelo navegador | Perda ou indisponibilidade de registros | Capturar erros de quota, solicitar persistência quando suportado sem prometer concessão, informar limites, salvar operações atômicas, orientar backup e testar importação/exportação em browser real |
+| Senha local e senha do backup esquecidas | Dados criptografados não podem ser recuperados | Explicar a separação de senhas e preservar o arquivo/senha do backup em local seguro |
 | Derivação de senha consome CPU, especialmente em celulares | Desbloqueio mais lento | Usar PBKDF2 com custo documentado e feedback acessível; medir em Android/iOS; permitir apenas parâmetros versionados que não enfraqueçam derivações futuras |
 | IV reutilizado ou AAD inconsistente | Risco de confidencialidade/integridade ou falha na leitura | Gerar IV criptograficamente aleatório por gravação, vincular AAD ao ID/coleção, testar leitura, alteração e tampering |
 | Service worker pode manter arquivos antigos durante uma atualização | Interface e esquema podem ficar incompatíveis | Versionar cache, atualizar shell de forma coordenada, manter compatibilidade de esquema e nunca limpar dados locais como parte de atualização |
@@ -192,6 +192,15 @@ Os módulos das Fases 2 e 3 usam coleções cifradas na store genérica existent
 - O fator de escala altera fontes tipográficas em pixels e dimensões das principais áreas de toque; o modo simplificado remove elementos decorativos, preservando rótulos e dados.
 - A aplicação oferece link para pular ao conteúdo principal, foco visível, foco transferido ao conteúdo em mudanças de rota e navegação da sidebar por teclado. A região completa da página não é anunciada como live region para evitar anúncios repetitivos; o status da página usa `role=status`.
 - O service worker passa para `lifeos-shell-v8` e pré-carrega o centro. Os critérios WCAG 2.2 AA ainda não foram declarados atendidos: faltam verificações abrangentes por módulo, leitor de tela e reflow em 200%.
+
+### Fase 6 — backup e confiabilidade
+
+- `src/backup.js` serializa um snapshot lógico em JSON versionado e o cifra com chave independente do cofre: PBKDF2-SHA-256, 310.000 iterações, salt de 16 bytes e AES-256-GCM com IV de 12 bytes, tag de 128 bits e AAD `lifeos-backup:v1`.
+- Importação limita arquivos a 50 MB e snapshots a 100.000 registros. Confere formato/versão, faixa de iterações, Base64 canônico, comprimentos criptográficos, autenticação, schema e IDs únicos antes de pedir confirmação para substituir os dados locais.
+- Restauração recripta os dados com a chave do cofre aberto e substitui o object store `records` dentro de uma transação única. O cofre e as preferências de aparência continuam acessíveis pela mesma chave local; o formato do cofre permanece em schema 1.
+- O IndexedDB usa versão 2 para garantir o índice de coleção em migração aditiva. Diagnóstico de armazenamento exibe uso/quota quando disponível, estado da persistência e contagens por coleção. A verificação de integridade tenta autenticar e interpretar cada registro sem expor seu conteúdo.
+- `service-worker.js` pré-carrega o módulo de backup sob `lifeos-shell-v9`. Não há sincronização ou upload de dados de backup.
+- Cobertura automatizada inclui cifragem/abertura, senha incorreta, adulteração, cabeçalho inválido, limites, IDs duplicados e rollback simulado de quota. Migração em IndexedDB real, download/importação no browser, quotas reais e ciclo offline continuam pendentes; a implementação não equivale à aprovação ponta a ponta.
 
 ### Validação realizada nas Fases 1 e 2
 

@@ -80,12 +80,14 @@ A suíte de unidade registrou **13 aprovações** em execução isolada anterior
 
 Apenas no nível coberto por testes isolados: cifragem/autenticação, rejeição de ciphertext/AAD incorretos, operações de repositório simuladas, preservação após lock/unlock simulado, rejeição de senha incorreta, recusa de uma escrita simulada sem substituir o envelope anterior, prevenção da corrida de configuração e regras básicas de datas/recorrência. Isso não equivale à aprovação funcional da aplicação ponta a ponta.
 
-## Planejamento proposto para backup criptografado — não implementado
+## Formato e implementação de backup da Fase 6
 
-1. Exportar arquivo versionado `application/vnd.lifeos.backup+json`, contendo `{format, version, createdAt, kdf, iterations, salt, cipher, iv, ciphertext}`. Derivar uma chave de backup separada por PBKDF2-SHA-256 e salt novo; cifrar um snapshot JSON integral com AES-256-GCM e IV de 12 bytes. AAD deve incluir domínio e versão do formato (`lifeos-backup:v1`). A senha do backup nunca vai dentro do arquivo.
-2. Snapshot interno inclui versão de schema, coleções e registros em formato lógico; validação de esquema, contagem/limites de tamanho, parâmetros KDF permitidos, base64 canônico, IV de 12 bytes e autenticação GCM antes de aceitar qualquer payload.
-3. Restaurar primeiro para memória/estrutura temporária; validar todos os registros e IDs, descriptografar tudo e confirmar a integridade antes de tocar no cofre ativo. Oferecer restauração para cofre vazio como padrão. Para substituição, exigir confirmação explícita e aplicar em banco temporário/versionado com troca somente após sucesso; manter o banco anterior até verificação final. Definir política de mesclagem separadamente (conflitos por ID não devem sobrescrever silenciosamente).
-4. Testar senha errada, truncamento, campos alterados, ciphertext corrompido, versão desconhecida, arquivo excessivo, duplicidade de ID, falha de quota durante restauração e rollback. Backup e restauração não devem enviar dados à rede.
+1. Implementado o arquivo versionado `application/vnd.lifeos.backup+json`, com `{format, version, createdAt, kdf, iterations, salt, cipher, iv, ciphertext}`. Usa chave de backup independente via PBKDF2-SHA-256 (310.000 iterações, salt novo de 16 bytes), AES-256-GCM (IV de 12 bytes, tag de 128 bits) e AAD `lifeos-backup:v1`. A senha não é incluída no arquivo.
+2. O snapshot lógico tem schema 1, coleção e ID por registro. A importação valida tamanho máximo de 50 MB, contagem máxima de 100.000 registros, cabeçalho/versão, faixa KDF, Base64 canônico, tamanhos de salt/IV, ciphertext mínimo, autenticação GCM e IDs repetidos antes de aceitar os dados.
+3. A restauração substitui o conteúdo atual depois de validação completa e confirmação explícita. Os registros são cifrados com a chave do cofre já desbloqueado e então substituídos em uma transação atômica `clear + put`; falha de quota aborta a transação e conserva o conjunto anterior. Não há mesclagem implícita. Essa operação é coberta por IndexedDB simulado; a atomicidade precisa de confirmação adicional em navegador real.
+4. Testes automatizados cobrem senha errada, ciphertext adulterado, JSON inválido, versão incompatível, IV inválido, excesso de tamanho, IDs duplicados e rollback simulado após falha de quota. A aplicação processa arquivos localmente e não os envia à rede. Truncamento e varredura/recuperação em browser real permanecem por verificar.
+
+As opções de armazenamento mostram estimativa/quota quando o navegador oferece, persistência disponível/concedida e contagem por coleção. “Validar dados locais” autentica e analisa o JSON de cada envelope sem exibir conteúdo. A migração do banco IndexedDB é aditiva para versão 2 e não altera os metadados criptográficos schema 1 do cofre. Atualizações de IndexedDB reais e comportamento de quota de cada navegador continuam pendentes de teste em perfil isolado.
 
 ## Próximas decisões técnicas necessárias
 
@@ -93,6 +95,6 @@ Apenas no nível coberto por testes isolados: cifragem/autenticação, rejeiçã
 2. Implementar e testar operação atômica para excluir objetivo e desvincular tarefas.
 3. Executar teste de integração isolado em perfil limpo de navegador: CRUD de cada módulo, reinício, bloqueio/desbloqueio, senha errada, ciphertext alterado e quota/falha controlada, sem dados pessoais.
 4. Executar teste PWA após aquecimento do cache: desconectar rede, recarregar, navegar, criar/editar/excluir dados de teste, reconectar e confirmar atualização controlada.
-5. Aprovar o formato de backup acima antes da implementação.
+5. Escolher navegadores/SOs mínimos para validar os fluxos da Fase 6 antes de declarar a confiabilidade verificada.
 
 **Decisão desta auditoria:** Fases 1 e 2 ainda não estão integralmente validadas; não iniciar Fase 3 até concluir os testes de integração pendentes.

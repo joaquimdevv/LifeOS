@@ -1,4 +1,5 @@
 import { openDatabase, hasVault, createVault, unlockVault } from './database.js';
+import { createBackupFile, readBackupFile, BACKUP_FORMAT, MAX_BACKUP_BYTES } from './backup.js';
 import { ACCENT_PRESETS, DEFAULT_PREFERENCES, TYPOGRAPHIES, applyPreferences, normalizePreferences } from './preferences.js';
 import { renderDashboard } from './modules/dashboard.js';
 import { renderTasks } from './modules/tasks.js';
@@ -53,6 +54,12 @@ function formatBytes(value) {
   let index = 0;
   while (size >= 1024 && index < units.length - 1) { size /= 1024; index += 1; }
   return `${size.toFixed(1)} ${units[index]}`;
+}
+
+function userError(error, fallback = 'A operação não pôde ser concluída.') {
+  if (error?.name === 'QuotaExceededError') return 'O navegador está sem espaço para salvar esses dados. Libere espaço e tente novamente.';
+  if (error?.name === 'AbortError') return 'O navegador cancelou a gravação. Os dados anteriores foram preservados; tente novamente.';
+  return error?.message || fallback;
 }
 
 function escapeHtml(value) {
@@ -126,7 +133,7 @@ async function renderAppearance() {
     catch (error) {
       preferences = previous;
       applyPreferences(preferences);
-      toast(`Não foi possível salvar: ${error.message}`);
+      toast(`Não foi possível salvar: ${userError(error)}`);
     }
     $('#accent-value').textContent = preferences.accent.toUpperCase();
     $('#accent-color').value = preferences.accent;
@@ -157,12 +164,16 @@ async function renderPrivacy() {
   const storageLine = info.estimate
     ? `${formatBytes(info.estimate.usage)} usados${Number.isFinite(info.estimate.quota) ? ` de ${formatBytes(info.estimate.quota)}` : ''}`
     : 'Estimativa indisponível neste navegador.';
+  const collectionNames = { tasks: 'Tarefas', events: 'Eventos', habits: 'Hábitos', habitLogs: 'Registros de hábitos', goals: 'Objetivos', settings: 'Configurações', notes: 'Anotações', projects: 'Projetos', studySessions: 'Estudos', focusSessions: 'Foco', fitnessActivities: 'Atividades físicas' };
+  const collectionLine = Object.entries(info.collectionCounts).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => `${escapeHtml(collectionNames[name] || name)}: ${count}`).join(' · ') || 'Nenhum registro';
   view.innerHTML = `
     <div class="page-heading"><div><p class="eyebrow">SEUS DADOS</p><h1>Privacidade e segurança</h1><p class="muted">O LifeOS mantém o conteúdo no navegador deste dispositivo.</p></div></div>
     <section class="privacy-grid">
       <article class="panel-card privacy-card"><div class="card-icon accent-icon">⌑</div><p class="eyebrow">CRIPTOGRAFIA</p><h2>Cofre AES-256-GCM</h2><p>O conteúdo de cada registro é cifrado antes de chegar ao IndexedDB. Sua senha deriva a chave localmente e não é enviada nem armazenada.</p><div class="privacy-fact"><span>Estado</span><strong>Desbloqueado</strong></div><button id="privacy-lock" class="button button-secondary" type="button">Bloquear cofre agora</button></article>
-      <article class="panel-card privacy-card"><div class="card-icon">▤</div><p class="eyebrow">ARMAZENAMENTO</p><h2>Neste navegador</h2><p>${escapeHtml(storageLine)}. O navegador pode aplicar limites ou remover dados do site; a persistência não é garantida.</p><div class="privacy-fact"><span>Registros cifrados</span><strong>${info.count}</strong></div><div class="privacy-fact"><span>Armazenamento persistente</span><strong>${escapeHtml(info.persistence)}</strong></div><button id="request-persistence" class="button button-quiet" type="button">Solicitar preservação</button><p id="persistence-result" class="field-hint" role="status"></p></article>
-      <article class="panel-card privacy-card wide-card"><div class="card-icon">↗</div><p class="eyebrow">BACKUPS E TRANSFERÊNCIA</p><h2>Os dados não sincronizam entre dispositivos</h2><p>Limpar dados do navegador pode apagar seus registros. Instalar o LifeOS não é um backup. A exportação e importação segura serão disponibilizadas em uma fase futura; até lá, não armazene aqui algo cuja única cópia seja este navegador.</p><span class="availability-label">Exportação e importação: fase futura</span></article>
+      <article class="panel-card privacy-card"><div class="card-icon">▤</div><p class="eyebrow">ARMAZENAMENTO</p><h2>Neste navegador</h2><p>${escapeHtml(storageLine)}. O navegador pode aplicar limites ou remover dados do site; a persistência não é garantida.</p><div class="privacy-fact"><span>Registros cifrados</span><strong>${info.count}</strong></div><p class="field-hint">${collectionLine}</p><div class="privacy-fact"><span>Armazenamento persistente</span><strong>${escapeHtml(info.persistence)}</strong></div><button id="request-persistence" class="button button-quiet" type="button">Solicitar preservação</button><button id="validate-storage" class="button button-secondary" type="button">Validar dados locais</button><p id="persistence-result" class="field-hint" role="status"></p><p id="storage-validation-result" class="field-hint" role="status" aria-live="polite"></p></article>
+      <article class="panel-card privacy-card wide-card"><div class="card-icon">↗</div><p class="eyebrow">BACKUPS E TRANSFERÊNCIA</p><h2>Backup criptografado</h2><p>O arquivo contém um snapshot cifrado independente da senha do cofre. Guarde a senha do backup separadamente. O LifeOS não envia esse arquivo para a rede.</p>
+        <form id="backup-export-form" class="backup-form"><label for="backup-export-password">Senha do backup (mínimo 10 caracteres)</label><input id="backup-export-password" type="password" minlength="10" autocomplete="new-password" required><label for="backup-export-confirm">Confirme a senha</label><input id="backup-export-confirm" type="password" minlength="10" autocomplete="new-password" required><button class="button button-secondary" type="submit">Exportar backup</button></form>
+        <form id="backup-import-form" class="backup-form"><label for="backup-file">Arquivo de backup (até 50 MB)</label><input id="backup-file" type="file" accept=".json,application/vnd.lifeos.backup+json,application/json" required><label for="backup-import-password">Senha do backup</label><input id="backup-import-password" type="password" autocomplete="current-password" required><button class="button button-quiet" type="submit">Validar e restaurar</button></form><p id="backup-result" class="field-hint" role="status" aria-live="polite"></p></article>
       <article class="panel-card privacy-card wide-card"><div class="card-icon">◌</div><p class="eyebrow">CONTEÚDO</p><h2>Você controla o acesso</h2><p>Ao bloquear ou fechar o LifeOS, a chave em memória é descartada. Enquanto o cofre estiver aberto, a página precisa descriptografar os registros para exibi-los. Proteja também o dispositivo e mantenha sua senha segura.</p><div class="privacy-fact"><span>Rede externa</span><strong>Nenhum dado enviado</strong></div><div class="privacy-fact"><span>Telemetria e publicidade</span><strong>Desativadas</strong></div></article>
     </section>`;
   $('#privacy-lock').addEventListener('click', lockVault);
@@ -171,6 +182,57 @@ async function renderPrivacy() {
     const messages = { granted: 'O navegador concedeu armazenamento persistente.', denied: 'O navegador não concedeu armazenamento persistente.', unsupported: 'Este navegador não oferece essa solicitação.' };
     $('#persistence-result').textContent = messages[result];
     toast(messages[result]);
+  });
+  $('#backup-export-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = $('#backup-result');
+    status.textContent = 'Validando e cifrando os registros…';
+    try {
+      const password = $('#backup-export-password').value;
+      if (password !== $('#backup-export-confirm').value) throw new Error('As senhas do backup não coincidem.');
+      const file = await createBackupFile(await vault.exportSnapshot(), password);
+      const blob = new Blob([JSON.stringify(file, null, 2)], { type: BACKUP_FORMAT });
+      if (blob.size > MAX_BACKUP_BYTES) throw new Error('O backup excede o limite de 50 MB.');
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `lifeos-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      status.textContent = `Backup criptografado exportado (${formatBytes(blob.size)}).`;
+      $('#backup-export-form').reset();
+    } catch (error) { status.textContent = userError(error, 'Falha ao exportar o backup.'); }
+  });
+  $('#backup-import-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = $('#backup-result');
+    const file = $('#backup-file').files?.[0];
+    if (!file) { status.textContent = 'Escolha um arquivo de backup.'; return; }
+    if (file.size > MAX_BACKUP_BYTES) { status.textContent = 'O arquivo excede o limite de 50 MB.'; return; }
+    status.textContent = 'Validando arquivo e autenticação…';
+    try {
+      const snapshot = await readBackupFile(await file.text(), $('#backup-import-password').value);
+      const current = await vault.storageInfo();
+      const accepted = window.confirm(`Backup válido com ${snapshot.records.length} registros. Restaurar agora substituirá todos os ${current.count} registros deste cofre. Esta ação não pode ser desfeita. Continuar?`);
+      if (!accepted) { status.textContent = 'Restauração cancelada; o cofre não foi alterado.'; return; }
+      const count = await vault.replaceAll(snapshot.records);
+      status.textContent = `Restauração concluída: ${count} registros autenticados e regravados no cofre.`;
+      toast('Backup restaurado.');
+      $('#backup-import-form').reset();
+    } catch (error) { status.textContent = userError(error, 'Falha ao validar ou restaurar o backup.'); }
+  });
+  $('#validate-storage').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const status = $('#storage-validation-result');
+    button.disabled = true;
+    status.textContent = 'Verificando autenticação e formato dos registros…';
+    try {
+      const result = await vault.validateIntegrity();
+      status.textContent = result.failures.length
+        ? `${result.valid} de ${result.total} registros válidos; ${result.failures.length} com falha de integridade. Nenhum dado foi alterado.`
+        : `Integridade confirmada: ${result.valid} registros autenticados e válidos.`;
+    } catch (error) { status.textContent = userError(error, 'Não foi possível validar o armazenamento.'); }
+    finally { button.disabled = false; }
   });
 }
 
@@ -300,6 +362,14 @@ function bindGlobalControls() {
   setSidebarOpen(false);
   window.addEventListener('online', updateConnectivity);
   window.addEventListener('offline', updateConnectivity);
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('Operação inesperada no LifeOS.', event.reason);
+    toast(userError(event.reason, 'Uma operação não foi concluída. Confira os dados e tente novamente.'));
+  });
+  window.addEventListener('error', (event) => {
+    console.error('Erro inesperado no LifeOS.', event.error || event.message);
+    toast('Ocorreu um erro inesperado. Atualize a tela; seus dados salvos permanecem no armazenamento local.');
+  });
   updateConnectivity();
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
