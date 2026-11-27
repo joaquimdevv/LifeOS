@@ -51,9 +51,9 @@ Detailed decisions, the database schema, risk assessments, and testing criteria 
 - [x] Focus Mode
 
 ### Phase 4 — Monitoring and Insights
-- [ ] Fitness Hub — implementation added; end-to-end validation pending
-- [ ] Analytics — implementation added; end-to-end validation pending
-- [ ] Knowledge Graph — implementation added; end-to-end validation pending
+- [x] Fitness Hub
+- [x] Analytics
+- [x] Knowledge Graph
 
 ### Phase 5 — Advanced Customization
 - [ ] Configurable Dashboard
