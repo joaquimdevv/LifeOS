@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lifeos-shell-v9';
+const CACHE_NAME = 'lifeos-shell-v10';
 const APP_SHELL = [
   './', './index.html', './manifest.webmanifest', './src/styles.css', './src/app.js',
   './src/crypto.js', './src/database.js', './src/backup.js', './src/preferences.js', './src/validation.js', './src/dom.js',

@@ -1,4 +1,4 @@
-# LifeOS
+# LifeOS 1.0.0
 
 LifeOS is a personal organization system, designed as a responsive, local-first Progressive Web App (PWA). Phase 1 establishes the navigable foundation, visual preferences, and an encrypted local vault.
 
@@ -71,14 +71,14 @@ Detailed decisions, the database schema, risk assessments, and testing criteria 
 - [x] Storage Management and Validation — per-collection counts, persistence request, and ciphertext integrity scan
 
 ### Phase 7 — Launch and Deployment
-- [ ] Application resource optimization
+- [x] Application resource optimization — no runtime dependencies; static SVG/SVG charts; versioned shell cache
 - [ ] Installation testing on Android
 - [ ] Installation testing on Desktop
 - [ ] Installation testing on iOS
 - [ ] Verification of offline functionality
 - [ ] Application update testing
 - [ ] HTTPS hosting configuration
-- [ ] Deployment and maintenance documentation
+- [x] Deployment and maintenance documentation — host/device execution remains pending
 
 **Roadmap and website proposed by artificial intelligence. Text documents also reviewed and corrected by artificial intelligence.**
 
@@ -91,3 +91,5 @@ The responsive sidebar fix adds an explicit close button, an outside-tap overlay
 The Accessibility Center adds globally persisted 90–200% text scaling, reinforced contrast, reduced motion, a simplified visual mode, and a skip-to-content link. Fixed CSS text sizes now use the same scale factor, and focus-visible indicators cover all focusable controls. The app shell cache advances to `lifeos-shell-v8`. WCAG 2.2 AA conformance is not claimed until broader module-by-module assistive-technology and reflow checks are complete.
 
 Phase 6 adds portable encrypted JSON backups using a separate PBKDF2-SHA-256 key (310,000 iterations, fresh 16-byte salt) and AES-256-GCM (fresh 12-byte IV, 128-bit tag, `lifeos-backup:v1` AAD). Imports authenticate and validate the complete snapshot before showing a replacement confirmation; restore re-encrypts every record under the currently unlocked vault key and swaps records in one IndexedDB transaction. Backups are limited to 50 MB and 100,000 records. Storage diagnostics include per-collection counts and an integrity scan. IndexedDB schema migration is additive (version 2) and keeps the vault's independent record schema unchanged. The service worker cache advances to `lifeos-shell-v9`. Browser-level validation of migration, download flows, quota behavior in real IndexedDB, and offline use remains pending.
+
+The project version is now `1.0.0` release candidate. Phase 7 release preparation adds deployment and maintenance guidance, keeps the app dependency-free, advances the shell cache to `lifeos-shell-v10`, and aligns the lock screen's password length and backup guidance with the implemented vault. The app is not yet a verified public 1.0 release: host/domain/HTTPS setup and physical-device, browser, offline, install, and update checks still need to be completed. See [docs/deployment.md](docs/deployment.md).

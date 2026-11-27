@@ -67,12 +67,12 @@
         <p id="lock-description" class="muted"></p>
         <form id="vault-form" class="form-stack">
           <label for="passphrase">Senha do cofre</label>
-          <input id="passphrase" name="passphrase" type="password" autocomplete="current-password" minlength="5" maxlength="512" required>
+          <input id="passphrase" name="passphrase" type="password" autocomplete="current-password" minlength="10" maxlength="512" required>
           <div id="confirm-row" hidden>
             <label for="passphrase-confirm">Confirme a senha</label>
             <input id="passphrase-confirm" name="passphrase-confirm" type="password" autocomplete="new-password" minlength="10" maxlength="512">
           </div>
-          <p class="lock-warning">A senha não é guardada. Se você a esquecer, não será possível recuperar os dados. Faça backups regulares quando a função de backup estiver disponível.</p>
+        <p class="lock-warning">A senha não é guardada. Se você a esquecer, não será possível recuperar os dados. Faça backups criptografados regulares em Privacidade e segurança.</p>
           <p id="lock-error" class="error-message" role="alert" hidden></p>
           <button class="button button-primary button-wide" type="submit" id="vault-submit">Desbloquear</button>
         </form>
