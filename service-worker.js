@@ -1,11 +1,11 @@
-const CACHE_NAME = 'lifeos-shell-v7';
+const CACHE_NAME = 'lifeos-shell-v8';
 const APP_SHELL = [
   './', './index.html', './manifest.webmanifest', './src/styles.css', './src/app.js',
   './src/crypto.js', './src/database.js', './src/preferences.js', './src/validation.js', './src/dom.js',
   './src/modules/dashboard.js', './src/modules/tasks.js', './src/modules/calendar.js',
   './src/modules/habits.js', './src/modules/goals.js',
   './src/modules/study.js', './src/modules/projects.js', './src/modules/notes.js', './src/modules/focus.js',
-  './src/modules/fitness.js', './src/modules/analytics.js', './src/modules/knowledge-graph.js', './src/modules/customization.js',
+  './src/modules/fitness.js', './src/modules/analytics.js', './src/modules/knowledge-graph.js', './src/modules/customization.js', './src/modules/accessibility.js',
   './public/icons/lifeos-192.svg', './public/icons/lifeos-512.svg'
 ];
 

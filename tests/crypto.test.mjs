@@ -32,7 +32,10 @@ test('preferências inválidas voltam a valores seguros e preservam personaliza�
   const preferences = normalizePreferences({ theme: 'rainbow', accent: '#22aabb', textScale: 200, radius: 5, density: 'compact' });
   assert.equal(preferences.theme, DEFAULT_PREFERENCES.theme);
   assert.equal(preferences.accent, '#22aabb');
-  assert.equal(preferences.textScale, 125);
+  assert.equal(preferences.textScale, 200);
+  assert.equal(normalizePreferences({ textScale: 250 }).textScale, 200);
+  assert.equal(normalizePreferences({ textScale: 80 }).textScale, 90);
+  assert.equal(normalizePreferences({ simplified: true }).simplified, true);
   assert.equal(preferences.radius, 8);
   assert.equal(preferences.density, 'compact');
   assert.equal(normalizePreferences({ typography: 'not-a-preset' }).typography, 'system');

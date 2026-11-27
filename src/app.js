@@ -13,6 +13,7 @@ import { renderFitness } from './modules/fitness.js';
 import { renderAnalytics } from './modules/analytics.js';
 import { renderKnowledgeGraph } from './modules/knowledge-graph.js';
 import { renderCustomization } from './modules/customization.js';
+import { renderAccessibility } from './modules/accessibility.js';
 import { $ } from './dom.js'
 
 const view = $('#view');
@@ -95,7 +96,8 @@ function setActiveRoute(route) {
 
 function renderDashboardView() { return renderDashboard(vault, view); }
 
-function renderAppearance() {
+async function renderAppearance() {
+  preferences = normalizePreferences(vault ? (await vault.get('settings', 'appearance')) || preferences : preferences);
   setPageTitle('Aparência');
   const presetButtons = ACCENT_PRESETS.map(({ name, color }) => `<button class="swatch${preferences.accent === color ? ' is-selected' : ''}" type="button" data-accent="${color}" aria-label="Cor ${name}" title="${name}" style="--swatch:${color}"></button>`).join('');
   const typeOptions = Object.keys(TYPOGRAPHIES).map((key) => {
@@ -111,10 +113,8 @@ function renderAppearance() {
         <div class="setting-section"><div><h2>Tipografia</h2><p>Escolha o estilo de leitura da interface.</p></div><label class="sr-only" for="typography">Tipografia</label><select id="typography" class="select-control">${typeOptions}</select></div>
         <div class="setting-section"><div><h2>Densidade</h2><p>Mais espaço ou mais conteúdo na tela.</p></div><div class="segmented" role="group" aria-label="Densidade"><button type="button" data-density-value="spacious" aria-pressed="${preferences.density === 'spacious'}">Ampla</button><button type="button" data-density-value="comfortable" aria-pressed="${preferences.density === 'comfortable'}">Confortável</button><button type="button" data-density-value="compact" aria-pressed="${preferences.density === 'compact'}">Compacta</button></div></div>
         <div class="setting-section"><div><h2>Superfície dos painéis</h2><p>Escolha o contraste dos cartões em relação ao fundo.</p></div><select id="surface-style" class="select-control"><option value="standard"${preferences.surface === 'standard' ? ' selected' : ''}>Padrão</option><option value="soft"${preferences.surface === 'soft' ? ' selected' : ''}>Suave</option></select></div>
-        <div class="setting-section range-section"><div><h2>Tamanho do texto</h2><p>De 90% a 125% do tamanho padrão.</p></div><div class="range-control"><input id="text-scale" type="range" min="90" max="125" step="5" value="${preferences.textScale}"><output id="text-scale-output">${preferences.textScale}%</output></div></div>
         <div class="setting-section range-section"><div><h2>Cantos</h2><p>Controle o arredondamento dos painéis.</p></div><div class="range-control"><input id="corner-radius" type="range" min="8" max="24" step="2" value="${preferences.radius}"><output id="corner-radius-output">${preferences.radius}px</output></div></div>
-        <div class="setting-section"><div><h2>Contraste reforçado</h2><p>Aumenta a definição de bordas e elementos.</p></div><label class="switch"><input id="contrast-toggle" type="checkbox"${preferences.contrast ? ' checked' : ''}><span class="switch-track"></span><span class="sr-only">Contraste reforçado</span></label></div>
-        <div class="setting-section"><div><h2>Reduzir movimento</h2><p>Minimiza transições e animações.</p></div><label class="switch"><input id="motion-toggle" type="checkbox"${preferences.reducedMotion ? ' checked' : ''}><span class="switch-track"></span><span class="sr-only">Reduzir movimento</span></label></div>
+        <div class="setting-section"><div><h2>Acessibilidade</h2><p>Ajuste o tamanho do texto, o contraste, o movimento e a simplicidade em um só lugar.</p></div><a class="button button-secondary" href="#accessibility">Abrir centro de acessibilidade</a></div>
       </section>
       <aside class="preview-column"><div class="preview-label"><span class="eyebrow">PRÉVIA</span><span class="live-indicator"><span class="status-dot"></span> Ao vivo</span></div><div class="preview-card"><div class="preview-top"><span class="preview-mark">L</span><span class="preview-lines"><i></i><i></i></span><span class="preview-avatar"></span></div><div class="preview-content"><span class="preview-kicker">SEU ESPAÇO</span><h3>Um dia de cada vez</h3><p>Pequenos passos também contam.</p><div class="preview-progress"><span></span></div><button type="button" class="preview-button" tabindex="-1" aria-hidden="true">Continuar</button></div></div><p class="preview-note">A prévia reflete tema, cor, tipografia, escala, densidade e superfície.</p></aside>
     </div>`;
@@ -132,12 +132,8 @@ function renderAppearance() {
     $('#accent-color').value = preferences.accent;
     $('#typography').value = preferences.typography;
     $('#surface-style').value = preferences.surface;
-    $('#text-scale-output').textContent = `${preferences.textScale}%`;
-    $('#text-scale').value = String(preferences.textScale);
     $('#corner-radius-output').textContent = `${preferences.radius}px`;
     $('#corner-radius').value = String(preferences.radius);
-    $('#contrast-toggle').checked = preferences.contrast;
-    $('#motion-toggle').checked = preferences.reducedMotion;
     view.querySelectorAll('[data-theme-value]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.themeValue === preferences.theme)));
     view.querySelectorAll('[data-density-value]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.densityValue === preferences.density)));
     view.querySelectorAll('[data-accent]').forEach((button) => button.classList.toggle('is-selected', button.dataset.accent === preferences.accent));
@@ -148,10 +144,7 @@ function renderAppearance() {
   $('#accent-color').addEventListener('input', (event) => save({ accent: event.target.value }));
   $('#typography').addEventListener('change', (event) => save({ typography: event.target.value }));
   $('#surface-style').addEventListener('change', (event) => save({ surface: event.target.value }));
-  $('#text-scale').addEventListener('input', (event) => save({ textScale: Number(event.target.value) }));
   $('#corner-radius').addEventListener('input', (event) => save({ radius: Number(event.target.value) }));
-  $('#contrast-toggle').addEventListener('change', (event) => save({ contrast: event.target.checked }));
-  $('#motion-toggle').addEventListener('change', (event) => save({ reducedMotion: event.target.checked }));
   $('#reset-appearance').addEventListener('click', async () => {
     await save({ ...DEFAULT_PREFERENCES });
     toast('A aparência padrão foi restaurada.');
@@ -183,7 +176,7 @@ async function renderPrivacy() {
 
 async function route() {
   const [name, routeParam = ''] = (location.hash.slice(1) || 'dashboard').split('/');
-  const validRoutes = ['dashboard', 'tasks', 'calendar', 'habits', 'goals', 'study', 'projects', 'notes', 'focus', 'fitness', 'analytics', 'knowledge', 'customization', 'appearance', 'privacy'];
+  const validRoutes = ['dashboard', 'tasks', 'calendar', 'habits', 'goals', 'study', 'projects', 'notes', 'focus', 'fitness', 'analytics', 'knowledge', 'customization', 'appearance', 'accessibility', 'privacy'];
   const routeName = validRoutes.includes(name) ? name : 'dashboard';
   if (!validRoutes.includes(name)) history.replaceState(null, '', '#dashboard');
   setActiveRoute(routeName);
@@ -202,7 +195,8 @@ async function route() {
   else if (routeName === 'analytics') { setPageTitle('Estatísticas'); await renderAnalytics(vault, view); }
   else if (routeName === 'knowledge') { setPageTitle('Mapa de conhecimento'); await renderKnowledgeGraph(vault, view); }
   else if (routeName === 'customization') { setPageTitle('Personalização'); await renderCustomization(vault, view, toast); }
-  else if (routeName === 'appearance') renderAppearance();
+  else if (routeName === 'appearance') await renderAppearance();
+  else if (routeName === 'accessibility') { setPageTitle('Acessibilidade'); await renderAccessibility(vault, view, toast); }
   else if (routeName === 'privacy') await renderPrivacy();
   $('#main-content').focus({ preventScroll: true });
 }

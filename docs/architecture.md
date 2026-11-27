@@ -186,6 +186,13 @@ Os módulos das Fases 2 e 3 usam coleções cifradas na store genérica existent
 - O service worker avança para `lifeos-shell-v6` e inclui o novo módulo. Persistência no cofre real, reabertura após bloqueio, interação por toque e layouts responsivos da Fase 5 ainda requerem validação integrada.
 - A barra lateral usa a altura da viewport (`100dvh`, com fallback), com rolagem apenas na navegação. Em telas móveis, botão X, overlay e Escape fecham o painel, restauram o foco no acionador e mantêm a rota atual; o service worker passa para `lifeos-shell-v7` para distribuir a correção.
 
+### Acessibilidade transversal
+
+- `accessibility.js` reúne escala de texto (90–200%), contraste reforçado, movimento reduzido e interface simplificada. As opções são persistidas no registro cifrado `settings/appearance`, reaproveitando as preferências existentes.
+- O fator de escala altera fontes tipográficas em pixels e dimensões das principais áreas de toque; o modo simplificado remove elementos decorativos, preservando rótulos e dados.
+- A aplicação oferece link para pular ao conteúdo principal, foco visível, foco transferido ao conteúdo em mudanças de rota e navegação da sidebar por teclado. A região completa da página não é anunciada como live region para evitar anúncios repetitivos; o status da página usa `role=status`.
+- O service worker passa para `lifeos-shell-v8` e pré-carrega o centro. Os critérios WCAG 2.2 AA ainda não foram declarados atendidos: faltam verificações abrangentes por módulo, leitor de tela e reflow em 200%.
+
 ### Validação realizada nas Fases 1 e 2
 
 - **8 testes unitários passaram**: cifra/decifra autenticadas; separação de chaves por salt; rejeição de ciphertext/contexto alterado; normalização das preferências; datas locais; recorrência diária/semanal/mensal; ocorrência de eventos; frequência de hábitos e identificação de tarefas atrasadas.

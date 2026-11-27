@@ -1,6 +1,6 @@
 export const DEFAULT_PREFERENCES = Object.freeze({
   theme: 'system', accent: '#a78bfa', typography: 'system', density: 'comfortable', surface: 'standard',
-  textScale: 100, radius: 16, contrast: false, reducedMotion: false
+  textScale: 100, radius: 16, contrast: false, reducedMotion: false, simplified: false
 });
 
 export const TYPOGRAPHIES = Object.freeze({
@@ -23,10 +23,11 @@ export function normalizePreferences(value = {}) {
   if (!/^#[0-9a-fA-F]{6}$/.test(merged.accent)) merged.accent = DEFAULT_PREFERENCES.accent;
   if (!['comfortable', 'compact', 'spacious'].includes(merged.density)) merged.density = DEFAULT_PREFERENCES.density;
   if (!['standard', 'soft'].includes(merged.surface)) merged.surface = DEFAULT_PREFERENCES.surface;
-  merged.textScale = Math.min(125, Math.max(90, Number(merged.textScale) || 100));
+  merged.textScale = Math.min(200, Math.max(90, Number(merged.textScale) || 100));
   merged.radius = Math.min(24, Math.max(8, Number(merged.radius) || 16));
   merged.contrast = Boolean(merged.contrast);
   merged.reducedMotion = Boolean(merged.reducedMotion);
+  merged.simplified = Boolean(merged.simplified);
   return merged;
 }
 
@@ -44,9 +45,11 @@ export function applyPreferences(input, root = document.documentElement) {
   root.dataset.surface = preferences.surface;
   root.dataset.contrast = preferences.contrast ? 'high' : 'normal';
   root.dataset.motion = preferences.reducedMotion ? 'reduced' : 'full';
+  root.dataset.simplified = preferences.simplified ? 'true' : 'false';
   root.style.setProperty('--accent', preferences.accent);
   root.style.setProperty('--accent-rgb', `${red} ${green} ${blue}`);
   root.style.setProperty('--font-family', TYPOGRAPHIES[preferences.typography]);
   root.style.setProperty('--text-scale', `${preferences.textScale}%`);
+  root.style.setProperty('--text-scale-factor', String(preferences.textScale / 100));
   root.style.setProperty('--radius', `${preferences.radius}px`);
 }
