@@ -16,12 +16,12 @@ function renderMarkdown(source, notes = []) {
   }).join('');
 }
 
-export async function renderNotes(vault, view, toast) {
+export async function renderNotes(vault, view, toast, initialNoteId = '') {
   let query = '';
   let folderFilter = '';
   let favoritesOnly = false;
-  let editingId = '';
-  let editorOpen = false;
+  let editingId = initialNoteId;
+  let editorOpen = Boolean(initialNoteId);
   let preview = false;
   let draftBody = null;
   const run = (action) => action().catch((e) => toast(`Não foi possível concluir: ${e.message}`));
@@ -52,9 +52,9 @@ export async function renderNotes(vault, view, toast) {
     $('#delete-note', view)?.addEventListener('click', () => run(() => deleteNote(editingId)));
   }
   function openEditor(id = '') { editingId = id; editorOpen = true; preview = false; draftBody = null; render(); }
-  function closeEditor() { editingId = ''; editorOpen = false; preview = false; draftBody = null; render(); }
-  async function saveNote(event) { event.preventDefault(); const form = event.currentTarget; const v = Object.fromEntries(new FormData(form)); const error = $('#note-error', view); try { const previous = editingId ? await vault.get('notes', editingId) : null; const allNotes = (await vault.list('notes')).filter((n) => n.id !== editingId); const tags = [...new Set(String(v.tags || '').split(',').map((x) => x.trim()).filter(Boolean))].slice(0, 20).map((x) => requireText(x, 'Etiqueta', 40)); const body = requireText(v.body, 'Conteúdo', 30000); const title = requireText(v.title, 'Título', 160); const links = [...new Set([...body.matchAll(/\[\[([^\]]{1,160})\]\]/g)].map((m) => allNotes.find((n) => n.value.title.toLocaleLowerCase('pt-BR') === m[1].trim().toLocaleLowerCase('pt-BR'))?.id).filter(Boolean))]; await vault.save('notes', editingId || makeId(), { title, folder: optionalText(v.folder, 80), tags, body, favorite: form.querySelector('[name="favorite"]').checked, links, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() }); editingId = ''; editorOpen = false; draftBody = null; toast(previous ? 'Nota atualizada.' : 'Nota criada.'); await render(); } catch (e) { error.textContent = e.message; error.hidden = false; } }
+  function closeEditor() { editingId = ''; editorOpen = false; preview = false; draftBody = null; if (location.hash.startsWith('#notes/')) history.replaceState(null, '', '#notes'); render(); }
+  async function saveNote(event) { event.preventDefault(); const form = event.currentTarget; const v = Object.fromEntries(new FormData(form)); const error = $('#note-error', view); try { const previous = editingId ? await vault.get('notes', editingId) : null; const allNotes = (await vault.list('notes')).filter((n) => n.id !== editingId); const tags = [...new Set(String(v.tags || '').split(',').map((x) => x.trim()).filter(Boolean))].slice(0, 20).map((x) => requireText(x, 'Etiqueta', 40)); const body = requireText(v.body, 'Conteúdo', 30000); const title = requireText(v.title, 'Título', 160); const links = [...new Set([...body.matchAll(/\[\[([^\]]{1,160})\]\]/g)].map((m) => allNotes.find((n) => n.value.title.toLocaleLowerCase('pt-BR') === m[1].trim().toLocaleLowerCase('pt-BR'))?.id).filter(Boolean))]; await vault.save('notes', editingId || makeId(), { title, folder: optionalText(v.folder, 80), tags, body, favorite: form.querySelector('[name="favorite"]').checked, links, createdAt: previous?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() }); editingId = ''; editorOpen = false; draftBody = null; if (location.hash.startsWith('#notes/')) history.replaceState(null, '', '#notes'); toast(previous ? 'Nota atualizada.' : 'Nota criada.'); await render(); } catch (e) { error.textContent = e.message; error.hidden = false; } }
   async function toggleFavorite(id) { const note = await vault.get('notes', id); if (!note) return; await vault.save('notes', id, { ...note, favorite: !note.favorite, updatedAt: new Date().toISOString() }); await render(); }
-  async function deleteNote(id) { const note = await vault.get('notes', id); if (!note || !confirm(`Excluir a nota “${note.title}”? Esta ação não pode ser desfeita.`)) return; await vault.delete('notes', id); editingId = ''; editorOpen = false; toast('Nota excluída.'); await render(); }
+  async function deleteNote(id) { const note = await vault.get('notes', id); if (!note || !confirm(`Excluir a nota “${note.title}”? Esta ação não pode ser desfeita.`)) return; await vault.delete('notes', id); editingId = ''; editorOpen = false; if (location.hash.startsWith('#notes/')) history.replaceState(null, '', '#notes'); toast('Nota excluída.'); await render(); }
   await render();
 }

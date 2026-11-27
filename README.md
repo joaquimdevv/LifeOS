@@ -11,7 +11,7 @@ The product will integrate tasks, studies, projects, habits, notes, goals, physi
 - Frontend: Semantic HTML, CSS, and modern JavaScript (using ES Modules); no UI framework in the initial version.
 - Persistence: IndexedDB, encapsulated by a repository layer. For the foundation, encryption is handled via the native Web Crypto API (PBKDF2-SHA-256 + AES-256-GCM), with no external dependencies.
 - PWA: Includes a manifest and a service worker that caches the application’s versioned assets. Personal data is stored in IndexedDB, not in the HTTP cache.
-- Charts: Chart.js will be used for tracking modules; D3 will be considered specifically for a knowledge graph.
+- Charts: inline SVG keeps charts available offline without a runtime chart dependency; D3 remains an option if the knowledge graph later needs larger-scale layouts.
 - Privacy: No accounts, synchronization, telemetry, or AI service calls by default.
 - Distribution: Static files compatible with HTTPS hosting. Local development requires a simple static server, as ES Modules and service workers do not function correctly when accessed via the `file://` protocol.
 
@@ -51,9 +51,9 @@ Detailed decisions, the database schema, risk assessments, and testing criteria 
 - [x] Focus Mode
 
 ### Phase 4 — Monitoring and Insights
-- [ ] Fitness Hub
-- [ ] Analytics
-- [ ] Knowledge Graph
+- [ ] Fitness Hub — implementation added; end-to-end validation pending
+- [ ] Analytics — implementation added; end-to-end validation pending
+- [ ] Knowledge Graph — implementation added; end-to-end validation pending
 
 ### Phase 5 — Advanced Customization
 - [ ] Configurable Dashboard
@@ -81,3 +81,5 @@ Detailed decisions, the database schema, risk assessments, and testing criteria 
 - [ ] Deployment and maintenance documentation
 
 **Roadmap and website proposed by artificial intelligence. Text documents also reviewed and corrected by artificial intelligence.**
+
+Phase 4 stores physical-activity entries in the encrypted `fitnessActivities` collection, derives analytics only from saved records, and draws offline-capable SVG charts without an external chart dependency. The knowledge graph reads note links from the encrypted notes collection, offers folder/tag filters, keyboard-selectable nodes, zoom/pan controls, and a list alternative; it limits the graph drawing to 80 nodes for readability. Automated module loading and an isolated browser smoke test against an in-memory vault passed: the fitness create/edit/delete flow, analytics summaries/charts, and knowledge graph rendering were exercised. The smoke test did not use the application's IndexedDB or encryption layer, so end-to-end validation with the real vault and offline installation remains pending; Phase 4 is not marked complete.

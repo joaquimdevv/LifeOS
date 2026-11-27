@@ -1,6 +1,6 @@
 # LifeOS — decisões de arquitetura da Fase 0
 
-**Status:** atualizada após a decisão de ampliar a personalização e criptografar o armazenamento. Fases 1 e 2 implementadas; módulos centrais da Fase 3 em implementação.
+**Status:** atualizada após a decisão de ampliar a personalização e criptografar o armazenamento. Módulos das Fases 1 a 3 presentes; implementação central da Fase 4 adicionada, aguardando validação de integração.
 
 ## 1. Requisitos que orientam a arquitetura
 
@@ -43,7 +43,7 @@ Banco: `lifeos`, versão inicial `1`. Usar IndexedDB nativo com chave primária 
 | `records` | `id`, `collection`, `iv`, `ciphertext` | `collection` |
 | `meta` | `key`, `value` | `key` (chave primária) |
 
-Registros de domínio são JSON dentro de `ciphertext`, agrupados logicamente em coleções como `tasks`, `events`, `habits`, `habitEntries`, `goals`, `studySubjects`, `studySessions`, `studyCards`, `studyQuestions`, `studyGrades`, `projects`, `notes`, `focusSessions`, `focusSettings` e `settings`. A chave e coleção ficam visíveis no envelope para localizar e substituir registros; campos e valores ficam criptografados. O índice `collection` é metadado visível. Migrações alteram a estrutura do envelope sem decifrar o conteúdo quando possível; migrações de payload são feitas após desbloqueio.
+Registros de domínio são JSON dentro de `ciphertext`, agrupados logicamente em coleções como `tasks`, `events`, `habits`, `habitEntries`, `goals`, `studySubjects`, `studySessions`, `studyCards`, `studyQuestions`, `studyGrades`, `projects`, `notes`, `focusSessions`, `focusSettings`, `fitnessActivities` e `settings`. A chave e coleção ficam visíveis no envelope para localizar e substituir registros; campos e valores ficam criptografados. O índice `collection` é metadado visível. Migrações alteram a estrutura do envelope sem decifrar o conteúdo quando possível; migrações de payload são feitas após desbloqueio.
 
 Referências internas são verificadas pelo serviço de domínio após descriptografia. IndexedDB não fornece chaves estrangeiras; exclusões relacionadas devem usar transação e política explícita de arquivamento, desvinculação ou confirmação.
 
@@ -169,6 +169,14 @@ Os módulos das Fases 2 e 3 usam coleções cifradas na store genérica existent
 - A navegação adiciona as quatro rotas; o service worker avança para `lifeos-shell-v4` e pré-carrega os módulos novos.
 - A visualização Lista/Quadro/Calendário de tarefas ocupa uma linha dedicada do toolbar: alinhada à direita em desktop e abaixo da busca/filtros em telas estreitas.
 - Os imports dos quatro módulos passaram por carregamento no Node. O DOM não foi simulado, e CRUD de interface, persistência após reinício, experiência visual em diferentes larguras e ciclo do cronômetro ainda requerem testes de integração no navegador. Anexos, histórico de edição de notas e sons do Modo Foco seguem pendentes.
+
+### Fase 4 — implementação central
+
+- `fitness.js` grava atividades de corrida, ciclismo, jiu-jitsu, força ou modalidade personalizada, com duração, data, distância opcional e métrica complementar.
+- `analytics.js` agrega tarefas, sessões, foco, hábitos, atividades, objetivos e projetos no período selecionado. Compara tarefas e minutos de foco/estudo com o período imediatamente anterior, inclui atrasos atuais e mostra distribuições reais por disciplina/modalidade. Os gráficos SVG inline não fazem chamadas de rede; essa escolha mantém o funcionamento offline e evita uma dependência de runtime adicional. Não foram inventados pontos para dias sem registros.
+- `knowledge-graph.js` constrói relações a partir dos IDs de `notes.links` e da sintaxe `[[título]]`; oferece filtro por pasta/etiqueta, seleção com teclado, destaque de vizinhos, controles de zoom/deslocamento e lista alternativa. O desenho limita-se a 80 nós e usa SVG nativo; D3 fica reservado para uma necessidade futura de layout de força com grafos maiores.
+- `dom.js` foi adicionado manualmente para centralizar seletores DOM e passou a ser importado pelos módulos; foi incluído no pré-cache do service worker. O cache subiu para `lifeos-shell-v5` e o shell inclui os três módulos novos.
+- Os imports podem ser carregados pelo runtime Node, mas CRUD de interface, IndexedDB real, atualização offline e adaptação visual ainda não foram validados no navegador. A Fase 4 não está aprovada até essa validação.
 
 ### Validação realizada nas Fases 1 e 2
 

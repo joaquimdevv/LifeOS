@@ -9,6 +9,9 @@ import { renderStudy } from './modules/study.js';
 import { renderProjects } from './modules/projects.js';
 import { renderNotes } from './modules/notes.js';
 import { pauseFocus, renderFocus } from './modules/focus.js';
+import { renderFitness } from './modules/fitness.js';
+import { renderAnalytics } from './modules/analytics.js';
+import { renderKnowledgeGraph } from './modules/knowledge-graph.js';
 import { $ } from './dom.js'
 
 const view = $('#view');
@@ -175,8 +178,8 @@ async function renderPrivacy() {
 }
 
 async function route() {
-  const name = location.hash.slice(1) || 'dashboard';
-  const validRoutes = ['dashboard', 'tasks', 'calendar', 'habits', 'goals', 'study', 'projects', 'notes', 'focus', 'appearance', 'privacy'];
+  const [name, routeParam = ''] = (location.hash.slice(1) || 'dashboard').split('/');
+  const validRoutes = ['dashboard', 'tasks', 'calendar', 'habits', 'goals', 'study', 'projects', 'notes', 'focus', 'fitness', 'analytics', 'knowledge', 'appearance', 'privacy'];
   const routeName = validRoutes.includes(name) ? name : 'dashboard';
   if (!validRoutes.includes(name)) history.replaceState(null, '', '#dashboard');
   setActiveRoute(routeName);
@@ -190,8 +193,11 @@ async function route() {
   else if (routeName === 'goals') { setPageTitle('Objetivos'); await renderGoals(vault, view, toast); }
   else if (routeName === 'study') { setPageTitle('Estudos'); await renderStudy(vault, view, toast); }
   else if (routeName === 'projects') { setPageTitle('Projetos'); await renderProjects(vault, view, toast); }
-  else if (routeName === 'notes') { setPageTitle('Anotações'); await renderNotes(vault, view, toast); }
+  else if (routeName === 'notes') { setPageTitle('Anotações'); await renderNotes(vault, view, toast, decodeURIComponent(routeParam)); }
   else if (routeName === 'focus') { setPageTitle('Modo Foco'); await renderFocus(vault, view, toast); }
+  else if (routeName === 'fitness') { setPageTitle('Atividades físicas'); await renderFitness(vault, view, toast); }
+  else if (routeName === 'analytics') { setPageTitle('Estatísticas'); await renderAnalytics(vault, view); }
+  else if (routeName === 'knowledge') { setPageTitle('Mapa de conhecimento'); await renderKnowledgeGraph(vault, view); }
   else if (routeName === 'appearance') renderAppearance();
   else if (routeName === 'privacy') await renderPrivacy();
   $('#main-content').focus({ preventScroll: true });
